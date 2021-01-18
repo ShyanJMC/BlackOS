@@ -1,5 +1,5 @@
 # BlackOS
-A Linux From Scratch system designed for ARMv8 Systems On a Chip.
+A Linux From Scratch system designed for ARMv8 System On a Chip (as know as; SOC).
 
 # Copyright
 Designed and build it by ShyanJMC (Joaquin Manuel Crespo). <br>
@@ -7,6 +7,7 @@ The programs under this project are in many licenses (like GPLv2, GPLv3, MIT and
 * https://github.com/ShyanJMC/LinuxFromScratch-Sources 
 
 # Usage
+0. Go to Github's releases ( https://github.com/ShyanJMC/BlackOS/releases ) and download it.
 1. Extract it with "-p" in "tar". Do it in a SDCARD in FAT32 and make it booteable in your partitions tool (fsck, gparted, etc).
 2. To boot the Linux system;
 > bootm /path/to/zImage
