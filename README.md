@@ -7,7 +7,7 @@ The programs under this project are in many licenses (like GPLv2, GPLv3, MIT and
 * https://github.com/ShyanJMC/LinuxFromScratch-Sources 
 
 # Usage
-1. Install in a SDCARD in FAT32 and make it booteable in your partitions tool (fsck, gparted, etc).
+1. Extract it with "-p" in "tar". Do it in a SDCARD in FAT32 and make it booteable in your partitions tool (fsck, gparted, etc).
 2. To boot the Linux system;
 > bootm /path/to/zImage
 
