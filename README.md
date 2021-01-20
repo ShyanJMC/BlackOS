@@ -2,7 +2,7 @@
 A Linux From Scratch system designed for ARMv7 System On a Chip (as know as; SOC).
 
 ### Note
-First alpha was for ARMv8 because is the most new, but is so new that qemu not support yet (and I will not use a Raspberry Pi 4 for do the test).
+First alpha was for ARMv8 because is the most new, but is so new that qemu not support yet.
 
 # Copyright
 Designed and build it by ShyanJMC (Joaquin Manuel Crespo). <br>
@@ -20,6 +20,9 @@ The programs under this project are in many licenses (like GPLv2, GPLv3, MIT and
 In BlackOS the path is "/boot". 
 
 . Root's password is empty, so in the login screen ingress as root without password.
+
+Also you can check the partition steps in;
+> https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-3 
 
 # Contact
 If you want or need contact me, you can do trough:
