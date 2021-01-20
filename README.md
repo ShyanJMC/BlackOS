@@ -12,7 +12,7 @@ The programs under this project are in many licenses (like GPLv2, GPLv3, MIT and
 # Usage
 0. Go to Github's releases ( https://github.com/ShyanJMC/BlackOS/releases ) and download it.
 1. Extract it with "-p" in "tar". 
-2. Create two partitions, the first with FAT32, make it booteable in your partitions tool (fsck, gparted, etc) and the second with EXT4.
+2. Create two partitions, the first with FAT32 (100Mb should be enough), make it booteable in your partitions tool (fsck, gparted, etc) and the second with EXT4.
 3. Mount the first partition (FAT32) in /boot into the second (Ext4) and copy the files with "-p" to not change the permissions.
 . To boot the Linux system;
 > bootm /path/to/zImage
