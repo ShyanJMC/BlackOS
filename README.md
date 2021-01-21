@@ -1,6 +1,23 @@
 # BlackOS
 A Linux From Scratch system designed for ARMv7 System On a Chip (as know as; SOC).
 
+# Supported SOCs platforms
+BlackOS is compiled for ARMv7. So if you have an ARMv8 (like Raspberry Pi 4 for example), you need enable the AArch32 mode to execute it. 
+
+Also the Linux kernel is compiled to support the chip BCM2835 (Raspberry Pi use it). So if you need support for another platform, you must re compile the Linux's kernel.
+
+First, download the kernel Linux (or clone my LinuxFromScratch Repo), uncompress it and then inside the folder do; 
+> ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make [defconfig_chip]
+
+To see the platforms and chips support ( the [defconfig_chip] before ) do;
+> ls arch/arm/configs
+
+Then, configure it;
+> ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make menuconfig
+
+And then compile it;
+> ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make -j[NUMBER_OF_CPUS_+1] zImage modules dtbs
+
 ### Note
 First alpha was for ARMv8 because is the most new, but is so new that qemu not support yet.
 
