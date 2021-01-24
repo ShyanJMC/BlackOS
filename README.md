@@ -1,12 +1,56 @@
 # BlackOS
-A Linux system from scratch designed for ARMv7 System On a Chip (known as SOC).
+A Linux system from scratch designed for ARMv8 System On a Chip (known as SOC). 
 
-# Supported SOCs platforms
-BlackOS is compiled for ARMv7. So if you have an ARMv8 (like Raspberry Pi 4 for example), you need to enable the AArch32 mode to execute it. 
+Is designed to be as minimal as possible, so expect to have a very base and minimal system. The reason of this is you can adapt your aplications for your requeriments.
+The Cross Toolchain were build with "crosstool-NG" and the system was build using CLFS (Cross Linux From Scratch).
 
-Also the Linux kernel is compiled to support the chip BCM2835 (Raspberry Pi use it). So if you need support for another platform, you must re compile the Linux kernel.
+## Environment Variables and bashrc file
+These are my variables inside ".bashrc" file:
 
-First, download the Linux kernel (or clone my LinuxFromScratch Repo), uncompress it and then inside the folder execute; 
+> export CLFS_HOST=x86_64-cross-linux-gnu
+
+> unset CFLAGS
+
+> set +h
+
+> umask 022
+
+> CLFS=/home/clfs/BlackOS
+
+> LC_ALL=POSIX
+
+> PATH=${CLFS}/cross-tools/bin:/bin:/usr/bin:/home/clfs/crosstool-ng/x-tools/arm-linux-uclibcgnueabi/bin/
+
+> export CLFS LC_ALL PATH
+
+> export ARCH=arm64
+
+> export CLFS_ARCH=arm64
+
+> export CLFS_ARM_ARCH="armv8"
+
+> export CLFS_TARGET=aarch64-linux-gnu
+
+> export CC="aarch64-linux-gnu-gcc --sysroot=/home/clfs/BlackOS/targetfs"
+
+> export CXX="aarch64-linux-gnu-g++ --sysroot=/home/clfs/BlackOS/targetfs"
+
+> export AR="aarch64-linux-gnu-ar"
+
+> export AS="aarch64-linux-gnu-as"
+
+> export LD="aarch64-linux-gnu-ld --sysroot=/home/clfs/BlackOS/targetfs"
+
+> export RANLIB="aarch64-linux-gnu-ranlib"
+
+> export READELF="aarch64-linux-gnu-readelf"
+
+> export STRIP="aarch64-linux-gnu-strip"
+
+# Re Build kernel
+If you have a platform which is not ARMv8 or need to rebuild the kernel need this;
+
+First, download the Linux kernel (or clone my LinuxFromScratch Repo), uncompress the linux-4.20.8 it and then inside the folder execute; 
 > ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make [defconfig_chip]
 
 To see the platforms and chips support ( the [defconfig_chip] before ) execute;
@@ -15,17 +59,17 @@ To see the platforms and chips support ( the [defconfig_chip] before ) execute;
 Then, configure it;
 > ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make menuconfig
 
-And then compile it;
-> ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make -j[NUMBER_OF_CPUS_+1] zImage modules dtbs
+And then compile it (don't use zImage because in ARM64 is not needed);
+> ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make -j[NUMBER_OF_CPUS_+1] Image modules dtbs
 
 When it's finished copy the respective files;
-> cp arch/arm/boot/dts/*.dtb /boot/
+> cp arch/arm/boot/dts/*.dtb $CLFS/targetfs/boot/
 
-> cp arch/arm/boot/dts/overlays/\*.dtb\* /boot/overlays/
+> cp arch/arm/boot/dts/overlays/\*.dtb\* $CLFS/targetfs/boot/overlays/
 
-> cp arch/arm/boot/dts/overlays/README /boot/overlays/
+> cp arch/arm/boot/dts/overlays/README $CLFS/targetfs/boot/overlays/
 
-> cp arch/arm/boot/zImage /boot/"your_image".img
+> cp arch/arm/boot/Image $CLFS/targetfs/boot/"your_image".img
 
 At least, edit the boot/config.txt to indicate your kernel;
 > kernel="your_image".img
