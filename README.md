@@ -5,6 +5,7 @@ Is designed to be as minimal as possible, so expect to have a very base and mini
 The Cross Toolchain were build with "crosstool-NG" using uclibc and the system was build using CLFS (Cross Linux From Scratch).
 
 ## Requeriments
+0. My repo linuxfromscratch-sources cloned into; /home/clfs/ and all tarballs uncompressed.
 1. crosstools-ng (you can find it in my linuxfromscratch-resources repo).
 2. clfs user to build it.
 3. crosstools-ng toolchain builded with uclibc in the folder; /home/clfs/crosstool-ng/{x-tools,src,etc} you can configure this when you build the toolchain with; 
