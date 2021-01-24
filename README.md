@@ -63,13 +63,13 @@ And then compile it (don't use zImage because in ARM64 is not needed);
 > ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make -j[NUMBER_OF_CPUS_+1] Image modules dtbs
 
 When it's finished copy the respective files;
-> cp arch/arm/boot/dts/*.dtb $CLFS/targetfs/boot/
+> cp arch/arm64/boot/dts/*.dtb $CLFS/targetfs/boot/
 
-> cp arch/arm/boot/dts/overlays/\*.dtb\* $CLFS/targetfs/boot/overlays/
+> cp arch/arm64/boot/dts/overlays/\*.dtb\* $CLFS/targetfs/boot/overlays/
 
-> cp arch/arm/boot/dts/overlays/README $CLFS/targetfs/boot/overlays/
+> cp arch/arm64/boot/dts/overlays/README $CLFS/targetfs/boot/overlays/
 
-> cp arch/arm/boot/Image $CLFS/targetfs/boot/"your_image".img
+> cp arch/arm64/boot/Image $CLFS/targetfs/boot/"your_image".img
 
 At least, edit the boot/config.txt to indicate your kernel;
 > kernel="your_image".img
