@@ -1,5 +1,16 @@
 #!/bin/bash
-# Maintainer; ShyanJMC (Joaquin Manuel Crespo)
+# Maintainer;	ShyanJMC (Joaquin Manuel Crespo)
+# Autor:	ShyanJMC (Joaquin Manuel Crespo)
+# Email:	joaquincrespo96@gmail.com
+
+################################################
+################################################
+
+export CPUTHREAD=$(cat /proc/cpuinfo | grep processor | wc | cut -d' ' -f7)
+
+###########################################################################
+######################## Functions zone ###################################
+###########################################################################
 
 function create_folders(){
 mkdir -pv ${CLFS}/targetfs/{bin,boot,dev,etc,home,lib/{firmware,modules}}
@@ -29,7 +40,7 @@ function musl(){
 mkdir /home/clfs/linuxfromscratch-sources/musl/build
 cd /home/clfs/linuxfromscratch-sources/musl/build
 ../configure CROSS_COMPILE=${CLFS_TARGET}- --prefix=/ --disable-static --target=${CLFS_TARGET}
-make
+make -j$CPUTHREAD
 DESTDIR=${CLFS}/targetfs make install-libs
 }
 
@@ -44,6 +55,7 @@ sed -i 's/\(CONFIG_FEATURE_WTMP\)=y/# \1 is not set/' .config
 sed -i 's/\(CONFIG_FEATURE_UTMP\)=y/# \1 is not set/' .config
 sed -i 's/\(CONFIG_UDPSVD\)=y/# \1 is not set/' .config
 sed -i 's/\(CONFIG_TCPSVD\)=y/# \1 is not set/' .config
+make ARCH="${CLFS_ARCH}" CROSS_COMPIlE="${CLFS_TARGET}-" -j$CPUTHREAD
 make ARCH="${CLFS_ARCH}" CROSS_COMPILE="${CLFS_TARGET}-" CONFIG_PREFIX="${CLFS}/targetfs" install
 cp -v examples/depmod.pl /home/clfs/crosstool-ng/x-tools/aarch64-linux-uclibc/bin
 chmod -v 755 /home/clfs/crosstool-ng/x-tools/aarch64-linux-uclibc/bin
@@ -68,7 +80,7 @@ function linux(){
 	make mrproper
 	make ARCH=arm64 defconfig
 	make ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- menuconfig
-	ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make Image modules dtbs
+	ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make -j$CPUTHREAD Image modules dtbs
 	make ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- INSTALL_MOD_PATH=${CLFS}/targetfs modules_install
 	cp arch/arm64/boot/dts/*.dtb $CLFS/targetfs/boot/
 	cp arch/arm64/boot/dts/overlays/*.dtb* $CLFS/targetfs/boot/overlays/
@@ -315,7 +327,7 @@ function dropbear(){
 cd /home/clfs/linuxfromscratch-sources/dropbear-2020.81
 sed -i 's/.*mandir.*//g' Makefile.in
 CC="${CC} -Os" ./configure --prefix=/usr --host=${CLFS_TARGET}
-make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"
+make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" -j$CPUTHREAD
 make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"  install DESTDIR=${CLFS}/targetfs
 install -dv ${CLFS}/targetfs/etc/dropbear
 cd /home/clfs/linuxfromscratch-sources/cross-lfs-bootscripts-embedded
@@ -327,21 +339,21 @@ cd /home/clfs/linuxfromscratch-sources/wireless_tools.29
 sed -i s/gcc/\$\{CLFS\_TARGET\}\-gcc/g Makefile
 sed -i s/\ ar/\ \$\{CLFS\_TARGET\}\-ar/g Makefile
 sed -i s/ranlib/\$\{CLFS\_TARGET\}\-ranlib/g Makefile
-make PREFIX=${CLFS}/targetfs/usr
+make PREFIX=${CLFS}/targetfs/usr -j$CPUTHREAD
 make install PREFIX=${CLFS}/targetfs/usr
 }
 
 function netplug(){
 cd /home/clfs/linuxfromscratch-sources/netplug-1.2.9.2
 patch -Np1 -i ../netplug-1.2.9.2-fixes-1.patch
-make
+make -j$CPUTHREAD
 make DESTDIR=${CLFS}/targetfs install
 }
 
 function zlib(){
 cd /home/clfs/linuxfromscratch-sources/zlib-1.2.11
 CFLAGS="-Os" ./configure --shared
-make
+make -j$CPUTHREAD
 make prefix=${CLFS}/cross-tools/${CLFS_TARGET} install
 cp -v ${CLFS}/cross-tools/${CLFS_TARGET}/lib/libz.so.1.2.8 ${CLFS}/targetfs/lib/
 ln -sv libz.so.1.2.8 ${CLFS}/targetfs/lib/libz.so.1
