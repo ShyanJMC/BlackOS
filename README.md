@@ -2,55 +2,29 @@
 A Linux system from scratch designed for ARMv8 System On a Chip (known as SOC). 
 
 Is designed to be as minimal as possible, so expect to have a very base and minimal system. The reason of this is you can adapt your aplications for your requeriments.
-The Cross Toolchain were build with "crosstool-NG" and the system was build using CLFS (Cross Linux From Scratch).
+The Cross Toolchain were build with "crosstool-NG" using uclibc and the system was build using CLFS (Cross Linux From Scratch).
 
-## Environment Variables and bashrc file
-These are my variables inside ".bashrc" file:
+## Requeriments
+1. crosstools-ng (you can find it in my linuxfromscratch-resources repo).
+2. clfs user to build it.
+3. crosstools-ng toolchain builded with uclibc in the folder; /home/clfs/crosstool-ng/{x-tools,src,etc} you can configure this when you build the toolchain with; 
+> ct-ng menuconfig
 
-> export CLFS_HOST=x86_64-cross-linux-gnu
+> ct-ng build
 
-> unset CFLAGS
+## Files
+> blackosrc
 
-> set +h
+Is the .bashrc which contains all variables.
 
-> umask 022
+> create_base_system.sh
 
-> CLFS=/home/clfs/BlackOS
-
-> LC_ALL=POSIX
-
-> PATH=${CLFS}/cross-tools/bin:/bin:/usr/bin:/home/clfs/crosstool-ng/x-tools/arm-linux-uclibcgnueabi/bin/
-
-> export CLFS LC_ALL PATH
-
-> export ARCH=arm64
-
-> export CLFS_ARCH=arm64
-
-> export CLFS_ARM_ARCH="armv8"
-
-> eexport CLFS_TARGET=aarch64-linux-uclibc
-
-> export CC="aarch64-linux-uclibc-gcc --sysroot=/home/clfs/BlackOS/targetfs"
-
-> export CXX="aarch64-linux-uclibc-g++ --sysroot=/home/clfs/BlackOS/targetfs"
-
-> export AR="aarch64-linux-uclibc-ar"
-
-> export AS="aarch64-linux-uclibc-as"
-
-> export LD="aarch64-linux-uclibc-ld --sysroot=/home/clfs/BlackOS/targetfs"
-
-> export RANLIB="aarch64-linux-uclibc-ranlib"
-
-> export READELF="aarch64-linux-uclibc-readelf"
-
-> export STRIP="aarch64-linux-uclibc-strip"
+Is the bash scripting file which contains functions and commands to build the system without go to CLFS and do each step
 
 # Re Build kernel
 If you have a platform which is not ARMv8 or need to rebuild the kernel need this;
 
-First, download the Linux kernel (or clone my LinuxFromScratch Repo), uncompress the linux-4.20.8 it and then inside the folder execute; 
+First, download the Linux kernel (or clone my LinuxFromScratch Repo), uncompress the linux tarball it and then inside the folder execute; 
 > ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make [defconfig_chip]
 
 To see the platforms and chips support ( the [defconfig_chip] before ) execute;
@@ -79,9 +53,6 @@ Also you can check these tutorials;
 > https://www.stephenwagner.com/2020/03/17/how-to-compile-linux-kernel-raspberry-pi-4-raspbian/
 
 > https://www.barebox.org/doc/latest/boards/bcm2835.html
-
-### Note
-First alpha was for ARMv8 because is the newest, but is so new that qemu do not support it yet.
 
 # Copyright
 Designed and built by ShyanJMC (Joaquin Manuel Crespo). <br>
