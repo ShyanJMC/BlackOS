@@ -354,3 +354,35 @@ install -dv ${CLFS}/build
 cd ${CLFS}/targetfs
 tar jcfv ${CLFS}/build/blackos-automated-$(date).tar.bz2 *
 }
+
+#####################################################
+##################### Def Zone ######################
+#####################################################
+
+curl https://raw.githubusercontent.com/ShyanJMC/BlackOS/main/bashrc > blackosrc
+source blackosrc
+
+#####################################################
+##################### Exec zone #####################
+#####################################################
+create_folders
+link_mtab
+create_root
+libgcc_s_so_1
+musl
+busybox
+ianaetc
+fstab
+linux
+cross_scripts
+mdev
+bprofile
+inittab
+hostname
+hostfile
+networkinterfaces
+dropbear
+wirelesstools
+netplug
+zlib
+ownership_tarball
