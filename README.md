@@ -29,23 +29,23 @@ These are my variables inside ".bashrc" file:
 
 > export CLFS_ARM_ARCH="armv8"
 
-> export CLFS_TARGET=aarch64-linux-gnu
+> eexport CLFS_TARGET=aarch64-linux-uclibc
 
-> export CC="aarch64-linux-gnu-gcc --sysroot=/home/clfs/BlackOS/targetfs"
+> export CC="aarch64-linux-uclibc-gcc --sysroot=/home/clfs/BlackOS/targetfs"
 
-> export CXX="aarch64-linux-gnu-g++ --sysroot=/home/clfs/BlackOS/targetfs"
+> export CXX="aarch64-linux-uclibc-g++ --sysroot=/home/clfs/BlackOS/targetfs"
 
-> export AR="aarch64-linux-gnu-ar"
+> export AR="aarch64-linux-uclibc-ar"
 
-> export AS="aarch64-linux-gnu-as"
+> export AS="aarch64-linux-uclibc-as"
 
-> export LD="aarch64-linux-gnu-ld --sysroot=/home/clfs/BlackOS/targetfs"
+> export LD="aarch64-linux-uclibc-ld --sysroot=/home/clfs/BlackOS/targetfs"
 
-> export RANLIB="aarch64-linux-gnu-ranlib"
+> export RANLIB="aarch64-linux-uclibc-ranlib"
 
-> export READELF="aarch64-linux-gnu-readelf"
+> export READELF="aarch64-linux-uclibc-readelf"
 
-> export STRIP="aarch64-linux-gnu-strip"
+> export STRIP="aarch64-linux-uclibc-strip"
 
 # Re Build kernel
 If you have a platform which is not ARMv8 or need to rebuild the kernel need this;
