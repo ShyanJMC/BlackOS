@@ -326,7 +326,7 @@ chmod +x ${CLFS}/targetfs/usr/share/udhcpc/default.script
 function dropbear(){
 cd /home/clfs/linuxfromscratch-sources/dropbear-2020.81
 sed -i 's/.*mandir.*//g' Makefile.in
-CC="${CC} -Os" ./configure --prefix=/usr --host=${CLFS_TARGET}
+CC="aarch64-linux-uclibc-gcc" CFLAGS="-Os -W -Wall" ./configure --prefix=/usr --host=${CLFS_TARGET} --enable-static --with-zlib=/home/clfs/linuxfromscratch-sources/zlib-1.2.11/
 make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" -j$CPUTHREAD
 make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"  install DESTDIR=${CLFS}/targetfs
 install -dv ${CLFS}/targetfs/etc/dropbear
@@ -352,12 +352,13 @@ make DESTDIR=${CLFS}/targetfs install
 
 function zlib(){
 cd /home/clfs/linuxfromscratch-sources/zlib-1.2.11
-CFLAGS="-Os" ./configure --shared
-make -j$CPUTHREAD
+CC="aarch64-linux-ucblic-gcc" CFLAGS="-Os" ./configure --shared
+make
 make prefix=${CLFS}/cross-tools/${CLFS_TARGET} install
-cp -v ${CLFS}/cross-tools/${CLFS_TARGET}/lib/libz.so.1.2.8 ${CLFS}/targetfs/lib/
-ln -sv libz.so.1.2.8 ${CLFS}/targetfs/lib/libz.so.1
+cp -v ${CLFS}/cross-tools/${CLFS_TARGET}/lib/libz.so.1.2.11 ${CLFS}/targetfs/lib/
+ln -sv libz.so.1.2.11 ${CLFS}/targetfs/lib/libz.so.1
 }
+
 
 function ownership_tarball(){
 su -c "chown -Rv root:root ${CLFS}/targetfs"
@@ -393,8 +394,8 @@ inittab
 hostname
 hostfile
 networkinterfaces
+zlib
 dropbear
 wirelesstools
 netplug
-zlib
 ownership_tarball
