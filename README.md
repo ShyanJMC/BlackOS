@@ -4,6 +4,8 @@ A Linux system from scratch designed for ARMv8 System On a Chip (known as SOC).
 Is designed to be as minimal as possible, so expect to have a very base and minimal system. The reason of this is you can adapt your aplications for your requeriments.
 The Cross Toolchain were build with "crosstool-NG" using uclibc and the system was build using CLFS (Cross Linux From Scratch).
 
+As primary test device, I use Rasberry Pi 4. So if you need support for specific SOC, you must rebuild the kernel.
+
 ## Requeriments
 0. My repo linuxfromscratch-sources cloned into; /home/clfs/ and all tarballs uncompressed.
 1. crosstools-ng (you can find it in my linuxfromscratch-resources repo).
@@ -38,7 +40,7 @@ And then compile it (don't use zImage because in ARM64 is not needed);
 > ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make -j[NUMBER_OF_CPUS_+1] Image modules dtbs
 
 When it's finished copy the respective files;
-> cp arch/arm64/boot/dts/*.dtb $CLFS/targetfs/boot/
+> cp arch/arm64/boot/dts/*/*dtb $CLFS/targetfs/boot/
 
 > cp arch/arm64/boot/dts/overlays/\*.dtb\* $CLFS/targetfs/boot/overlays/
 
