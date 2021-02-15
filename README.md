@@ -6,7 +6,10 @@ The Cross Toolchain were build with "crosstool-NG" using uclibc and the system w
 
 In the firsts steps of this proyect, I built it for Raspberry Pi and Pine Rock64 but after see that there are so many SBCs in the world(each one with specifics configurations to boot), I choose make a Linux system without kernel. So, you download the release, you compile the kernel for the ARCH target and then you integrate the firmware and the bootloader into it to boot BlackOS, more easy and will do BlackOS more portable. 
 
-## Requeriments
+# How to use
+Go to "Releases" page, download the release of your choise. Uncompress it, compile the kernel and follow the indications for your Single Board Computer model and then boot.
+
+## Requeriments to compile kernel or build from scratch.
 0. My repo linuxfromscratch-sources cloned into; /home/clfs/ and all tarballs uncompressed.
 1. crosstools-ng (you can find it in my linuxfromscratch-resources repo).
 2. clfs user to build it.
@@ -22,7 +25,9 @@ Is the .bashrc which contains all variables.
 
 > create_base_system.sh
 
-Is the bash scripting file which contains functions and commands to build the system without go to CLFS and do each step
+Is the bash scripting file which contains functions and commands to build the system without go to CLFS and do each step to build BlackOS from scratch.
+
+In the "config" folder, there are some kernel's configurations files (.config) depending of the SBC.
 
 # Re Build kernel
 If you have a platform which is not ARMv8 or need to rebuild the kernel need this;
