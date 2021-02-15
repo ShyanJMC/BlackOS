@@ -4,7 +4,7 @@ A Linux system from scratch designed for ARMv8 System On a Chip (known as SOC).
 Is designed to be as minimal as possible, so expect to have a very base and minimal system. The reason of this is you can adapt your aplications for your requeriments.
 The Cross Toolchain were build with "crosstool-NG" using uclibc and the system was build using CLFS (Cross Linux From Scratch).
 
-As primary test device, I use Rasberry Pi 4. So if you need support for specific SOC, you must rebuild the kernel.
+In the firsts steps of this proyect, I built it for Raspberry Pi and Pine Rock64 but after see that there are so many SBCs in the world(each one with specifics configurations to boot), I choose make a Linux system without kernel. So, you download the release, you compile the kernel for the ARCH target and then you integrate the firmware and the bootloader into it to boot BlackOS, more easy and will do BlackOS more portable. 
 
 ## Requeriments
 0. My repo linuxfromscratch-sources cloned into; /home/clfs/ and all tarballs uncompressed.
