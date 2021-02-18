@@ -33,8 +33,8 @@ EOF
 }
 
 function libgcc_s_so_1(){
-cp -v /home/clfs/crosstools-ng/x-tools/aarch64-linux-uclibc/aarch64-linux-uclibc/lib64/libgcc_s.so.1 ${CLFS}/targetfs/lib/libgcc_s.so.1
-${CLFS_TARGET}-strip ${CLFS}/targetfs/lib/libgcc_s.so.1
+cp -v /home/clfs/crosstool-ng/x-tools/aarch64-linux-gnu/aarch64-linux-gnu/lib64/libgcc_s.so.1 ${CLFS}/targetfs/lib/libgcc_s.so.1
+# ${CLFS_TARGET}-strip ${CLFS}/targetfs/lib/libgcc_s.so.1
 }
 
 function musl(){
@@ -58,8 +58,6 @@ sed -i 's/\(CONFIG_UDPSVD\)=y/# \1 is not set/' .config
 sed -i 's/\(CONFIG_TCPSVD\)=y/# \1 is not set/' .config
 make ARCH="${CLFS_ARCH}" CROSS_COMPIlE="${CLFS_TARGET}-" -j$CPUTHREAD
 make ARCH="${CLFS_ARCH}" CROSS_COMPILE="${CLFS_TARGET}-" CONFIG_PREFIX="${CLFS}/targetfs" install
-cp -v examples/depmod.pl /home/clfs/crosstool-ng/x-tools/aarch64-linux-uclibc/bin
-chmod -v 755 /home/clfs/crosstool-ng/x-tools/aarch64-linux-uclibc/bin
 }
 
 function ianaetc(){
@@ -408,7 +406,7 @@ chmod +x ${CLFS}/targetfs/usr/share/udhcpc/default.script
 function dropbear(){
 cd /home/clfs/linuxfromscratch-sources/dropbear-2020.81
 sed -i 's/.*mandir.*//g' Makefile.in
-CC="aarch64-linux-uclibc-gcc" CFLAGS="-Os -W -Wall" ./configure --prefix=/usr --host=${CLFS_TARGET} --enable-static --with-zlib=/home/clfs/linuxfromscratch-sources/zlib-1.2.11/
+CC=$CC CFLAGS="-Os -W -Wall" ./configure --prefix=/usr --host=${CLFS_TARGET} --enable-static --with-zlib=/home/clfs/linuxfromscratch-sources/zlib-1.2.11/
 make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" -j$CPUTHREAD
 make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"  install DESTDIR=${CLFS}/targetfs
 install -dv ${CLFS}/targetfs/etc/dropbear
@@ -434,7 +432,7 @@ make DESTDIR=${CLFS}/targetfs install
 
 function zlib(){
 cd /home/clfs/linuxfromscratch-sources/zlib-1.2.11
-CC="aarch64-linux-ucblic-gcc" CFLAGS="-Os" ./configure --shared
+CC=$CC CFLAGS="-Os" ./configure --shared
 make
 make prefix=${CLFS}/cross-tools/${CLFS_TARGET} install
 cp -v ${CLFS}/cross-tools/${CLFS_TARGET}/lib/libz.so.1.2.11 ${CLFS}/targetfs/lib/
