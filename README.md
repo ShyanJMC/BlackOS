@@ -12,7 +12,7 @@ Go to "Releases" page, download the release of your choise. Uncompress it, compi
 
 ## Requeriments to compile kernel or build from scratch.
 0. My repo linuxfromscratch-sources cloned into; /home/clfs/ and all tarballs uncompressed.
-1. crosstools-ng (you can find it in my linuxfromscratch-resources repo).
+1. crosstools-ng (you can find it in my linuxfromscratch-resources repo). Built it with "armv8-a" and GlibC option.
 2. clfs user to build it.
 3. crosstools-ng toolchain builded with uclibc in the folder; /home/clfs/crosstool-ng/{x-tools,src,etc} you can configure this when you build the toolchain with; 
 > ct-ng menuconfig
