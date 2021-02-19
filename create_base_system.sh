@@ -48,7 +48,7 @@ DESTDIR=${CLFS}/targetfs make install-libs
 function busybox(){
 cd /home/clfs/linuxfromscratch-sources/busybox
 make distclean
-make ARCH="${CLFS_ARCH}" defconfig
+make ARCH=${CLFS_ARCH} defconfig
 make menuconfig
 sed -i 's/\(CONFIG_\)\(.*\)\(INETD\)\(.*\)=y/# \1\2\3\4 is not set/g' .config
 sed -i 's/\(CONFIG_IFPLUGD\)=y/# \1 is not set/' .config
@@ -445,7 +445,7 @@ su -c "chown -Rv root:root ${CLFS}/targetfs"
 su -c "chgrp -v 13 ${CLFS}/targetfs/var/log/lastlog"
 install -dv ${CLFS}/build
 cd ${CLFS}/targetfs
-tar jcfv ${CLFS}/build/blackos-automated-$(date).tar.bz2 *
+tar Jcfv ${CLFS}/build/blackos-automated-$(date).tar.bz2 *
 }
 
 #####################################################
