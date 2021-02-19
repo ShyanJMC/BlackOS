@@ -146,17 +146,17 @@ fuse            root:root  0666
 card[0-9]       root:video 0660 =dri/
 
 # alsa sound devices and audio stuff
-pcm.*           root:audio 0660 =snd/
-control.*       root:audio 0660 =snd/
-midi.*          root:audio 0660 =snd/
-seq             root:audio 0660 =snd/
-timer           root:audio 0660 =snd/
+# pcm.*           root:audio 0660 =snd/
+# control.*       root:audio 0660 =snd/
+# midi.*          root:audio 0660 =snd/
+# seq             root:audio 0660 =snd/
+# timer           root:audio 0660 =snd/
 
-adsp            root:audio 0660 >sound/
-audio           root:audio 0660 >sound/
-dsp             root:audio 0660 >sound/
-mixer           root:audio 0660 >sound/
-sequencer.*     root:audio 0660 >sound/
+# adsp            root:audio 0660 >sound/
+# audio           root:audio 0660 >sound/
+# dsp             root:audio 0660 >sound/
+# mixer           root:audio 0660 >sound/
+# sequencer.*     root:audio 0660 >sound/
 
 # misc stuff
 agpgart         root:root 0660  >misc/
@@ -164,10 +164,11 @@ psaux           root:root 0660  >misc/
 rtc             root:root 0664  >misc/
 
 # input stuff
-event[0-9]+     root:root 0640 =input/
-mice            root:root 0640 =input/
-mouse[0-9]      root:root 0640 =input/
-ts[0-9]         root:root 0600 =input/
+event[0-9]+     root:root 0640 > input/
+mice            root:root 0640 > input/
+mouse[0-9]      root:root 0640 > input/
+ts[0-9]         root:root 0600 > input/
+
 
 # v4l stuff
 vbi[0-9]        root:video 0660 >v4l/
@@ -181,8 +182,8 @@ usbdev[0-9].[0-9]       root:root 0660 */lib/mdev/usbdev
 usbdev[0-9].[0-9]_.*    root:root 0660
 
 # net devices
-tun[0-9]*       root:root 0600 =net/
-tap[0-9]*       root:root 0600 =net/
+tun[0-9]*       root:root 0600 > net/
+tap[0-9]*       root:root 0600 > net/
 
 # zaptel devices
 zap(.*)         root:dialout 0660 =zap/%1
@@ -296,7 +297,7 @@ cat > ${CLFS}/targetfs/etc/inittab<< "EOF"
 # Boot-time system configuration/initialization script.
 # This is run first except when booting in single-user mode.
 #
-::sysinit:/etc/init.d/rcS
+# ::sysinit:/etc/init.d/rcS
 
 # /bin/sh invocations on selected ttys
 #
@@ -306,7 +307,8 @@ cat > ${CLFS}/targetfs/etc/inittab<< "EOF"
 # this yourself...
 #
 # Start an "askfirst" shell on the console (whatever that may be)
-::askfirst:-/bin/sh
+::sysinit:-/bin/sh
+
 # Start an "askfirst" shell on /dev/tty2-4
 tty2::askfirst:-/bin/sh
 tty3::askfirst:-/bin/sh
