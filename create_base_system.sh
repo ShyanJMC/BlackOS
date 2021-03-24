@@ -509,4 +509,5 @@ zlib
 dropbear
 wirelesstools
 netplug
+os-release
 ownership_tarball
