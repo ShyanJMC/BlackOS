@@ -47,13 +47,21 @@ DESTDIR=${CLFS}/targetfs make install-libs
 
 function busybox(){
 cd /home/clfs/linuxfromscratch-sources/busybox
+
+# Check if ".config" file exist
 if [ -f ".config"  ]; then
+	# If exist execute
 	make menuconfig
 else
+	# If not, execute
 	make distclean
 	make ARCH=${CLFS_ARCH} defconfig
 	make menuconfig
 fi
+
+# For some reason sometimes this happen. So, yes, this is not the best fix but works.
+sed -i 's/aarch64-linux-gnugcc/aarch64-linux-gnu-gcc/g' *
+
 sed -i 's/\(CONFIG_\)\(.*\)\(INETD\)\(.*\)=y/# \1\2\3\4 is not set/g' .config
 sed -i 's/\(CONFIG_IFPLUGD\)=y/# \1 is not set/' .config
 sed -i 's/\(CONFIG_FEATURE_WTMP\)=y/# \1 is not set/' .config
