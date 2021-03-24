@@ -2,13 +2,16 @@
 # Maintainer;	ShyanJMC (Joaquin Manuel Crespo)
 # Autor:	ShyanJMC (Joaquin Manuel Crespo)
 # Email:	joaquincrespo96@gmail.com
-# Copyright; 	2021
+# Copyright; 	2021(c)
 
 ################################################
+############## Variables zone ##################
 ################################################
 
 export CPUTHREAD=$(cat /proc/cpuinfo | grep processor | wc | cut -d' ' -f7)
 export BUSYBOX_BRANCH=remotes/origin/1_33_stable
+export DROPBEAR_TAG=tag/DROPBEAR_2020.81
+export ZLIB_TAG=tags/v1.2.11
 
 ###########################################################################
 ######################## Functions zone ###################################
@@ -421,7 +424,8 @@ chmod +x ${CLFS}/targetfs/usr/share/udhcpc/default.script
 }
 
 function dropbear(){
-cd /home/clfs/linuxfromscratch-sources/dropbear-2020.81
+cd /home/clfs/linuxfromscratch-sources/dropbear
+git checkout $DROPBEAR_TAG
 sed -i 's/.*mandir.*//g' Makefile.in
 CC=$CC CFLAGS="-Os -W -Wall" ./configure --prefix=/usr --host=${CLFS_TARGET} --enable-static --with-zlib=/home/clfs/linuxfromscratch-sources/zlib-1.2.11/
 make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" -j$CPUTHREAD
@@ -448,7 +452,8 @@ make DESTDIR=${CLFS}/targetfs install
 }
 
 function zlib(){
-cd /home/clfs/linuxfromscratch-sources/zlib-1.2.11
+cd /home/clfs/linuxfromscratch-sources/zlib
+git checkout $ZLIB_TAG
 CC=$CC CFLAGS="-Os" ./configure --shared
 make
 make prefix=${CLFS}/cross-tools/${CLFS_TARGET} install
