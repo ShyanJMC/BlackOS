@@ -476,7 +476,7 @@ su -c "chown -Rv root:root ${CLFS}/targetfs"
 su -c "chgrp -v 13 ${CLFS}/targetfs/var/log/lastlog"
 install -dv ${CLFS}/build
 cd ${CLFS}/targetfs
-tar Jcfv ${CLFS}/build/blackos-automated-$(date).tar.bz2 *
+su -c "tar -czfv ${CLFS}/build/blackos-automated.tar.bz2 * && chown clfs:clfs ${CLFS}/build/*"
 }
 
 #####################################################
