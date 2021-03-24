@@ -18,16 +18,16 @@ export ARCH="aarch64"
 export CLFS_ARCH="aarch64"
 export CLFS_ARM_ARCH="aarch64"
 export CLFS_TARGET=aarch64-linux-gnu
-export CROSS_COMPILE=aarch64-linux-gnu
+export CROSS_COMPILE=aarch64-linux-gnu-
 
 
 
 # Architecture Version
-export CC="${CROSS_COMPILE}-gcc --sysroot=/usr/aarch64-linux-gnu/"
-export CXX="${CROSS_COMPILE}-g++ --sysroot=/usr/aarch64-linux-gnu/"
-export AR="${CROSS_COMPILE}-ar"
-export AS="${CROSS_COMPILE}-as"
-export LD="${CROSS_COMPILE}-ld --sysroot=/usr/aarch64-linux-gnu/"
-export RANLIB="${CROSS_COMPILE}-ranlib"
-export READELF="${CROSS_COMPILE}-readelf"
-export STRIP="${CROSS_COMPILE}-strip"
+export CC="${CROSS_COMPILE}gcc --sysroot=/usr/aarch64-linux-gnu/"
+export CXX="${CROSS_COMPILE}g++ --sysroot=/usr/aarch64-linux-gnu/"
+export AR="${CROSS_COMPILE}ar"
+export AS="${CROSS_COMPILE}as"
+export LD="${CROSS_COMPILE}ld --sysroot=/usr/aarch64-linux-gnu/"
+export RANLIB="${CROSS_COMPILE}ranlib"
+export READELF="${CROSS_COMPILE}readelf"
+export STRIP="${CROSS_COMPILE}strip"
