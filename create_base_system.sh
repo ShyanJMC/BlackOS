@@ -8,6 +8,7 @@
 ################################################
 
 export CPUTHREAD=$(cat /proc/cpuinfo | grep processor | wc | cut -d' ' -f7)
+export BUSYBOX_BRANCH=remotes/origin/1_33_stable
 
 ###########################################################################
 ######################## Functions zone ###################################
@@ -48,6 +49,8 @@ DESTDIR=${CLFS}/targetfs make install-libs
 function busybox(){
 cd /home/clfs/linuxfromscratch-sources/busybox
 
+git checkout $BUSYBOX_BRANCH
+
 # Check if ".config" file exist
 if [ -f ".config"  ]; then
 	# If exist execute
@@ -68,7 +71,7 @@ sed -i 's/\(CONFIG_FEATURE_WTMP\)=y/# \1 is not set/' .config
 sed -i 's/\(CONFIG_FEATURE_UTMP\)=y/# \1 is not set/' .config
 sed -i 's/\(CONFIG_UDPSVD\)=y/# \1 is not set/' .config
 sed -i 's/\(CONFIG_TCPSVD\)=y/# \1 is not set/' .config
-make ARCH="${CLFS_ARCH}" CROSS_COMPIlE="${CLFS_TARGET}-" -j$CPUTHREAD
+CC='aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu/' make ARCH="${CLFS_ARCH}" CROSS_COMPIlE="${CLFS_TARGET}-" -j$CPUTHREAD
 make ARCH="${CLFS_ARCH}" CROSS_COMPILE="${CLFS_TARGET}-" CONFIG_PREFIX="${CLFS}/targetfs" install
 }
 
