@@ -60,7 +60,7 @@ else
 fi
 
 # For some reason sometimes this happen. So, yes, this is not the best fix but works.
-sed -i 's/aarch64-linux-gnugcc/aarch64-linux-gnu-gcc/g' *
+sed -i 's/aarch64-linux-gnugcc/aarch64-linux-gnu-gcc/g' scripts/gcc-version.sh
 
 sed -i 's/\(CONFIG_\)\(.*\)\(INETD\)\(.*\)=y/# \1\2\3\4 is not set/g' .config
 sed -i 's/\(CONFIG_IFPLUGD\)=y/# \1 is not set/' .config
@@ -453,6 +453,15 @@ cp -v ${CLFS}/cross-tools/${CLFS_TARGET}/lib/libz.so.1.2.11 ${CLFS}/targetfs/lib
 ln -sv libz.so.1.2.11 ${CLFS}/targetfs/lib/libz.so.1
 }
 
+function os-release(){
+cat << EOF > ${CLFS}/targetfs/etc/os-release
+NAME="BlackOS Linux"
+PRETTY_NAME="BlackOS Linux"
+ID=blackos
+BUILD_ID=release
+HOME_URL="https://www.shyanjmc.com"
+EOF
+}
 
 function ownership_tarball(){
 su -c "chown -Rv root:root ${CLFS}/targetfs"
