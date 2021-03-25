@@ -9,7 +9,7 @@
 ################################################
 
 export CPUTHREAD=$(cat /proc/cpuinfo | grep processor | wc | cut -d' ' -f7)
-export BUSYBOX_BRANCH=remotes/origin/1_33_stable
+export BUSYBOX_BRANCH=remotes/origin/1_32_stable
 export DROPBEAR_TAG=tag/DROPBEAR_2020.81
 export ZLIB_TAG=tags/v1.2.11
 
@@ -37,7 +37,7 @@ EOF
 }
 
 function libgcc_s_so_1(){
-cp -v /home/clfs/crosstool-ng/x-tools/aarch64-linux-gnu/aarch64-linux-gnu/lib64/libgcc_s.so.1 ${CLFS}/targetfs/lib/libgcc_s.so.1
+cp -v /usr/aarch64-linux-gnu/lib64/libgcc_s.so.1 ${CLFS}/targetfs/lib/libgcc_s.so.1
 # ${CLFS_TARGET}-strip ${CLFS}/targetfs/lib/libgcc_s.so.1
 }
 
@@ -64,9 +64,6 @@ else
 	make ARCH=${CLFS_ARCH} defconfig
 	make menuconfig
 fi
-
-# For some reason sometimes this happen. So, yes, this is not the best fix but works.
-sed -i 's/aarch64-linux-gnugcc/aarch64-linux-gnu-gcc/g' scripts/gcc-version.sh
 
 sed -i 's/\(CONFIG_\)\(.*\)\(INETD\)\(.*\)=y/# \1\2\3\4 is not set/g' .config
 sed -i 's/\(CONFIG_IFPLUGD\)=y/# \1 is not set/' .config
