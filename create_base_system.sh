@@ -18,98 +18,100 @@ export ZLIB_TAG=tags/v1.2.11
 ###########################################################################
 
 function create_folders(){
-mkdir -pv ${CLFS}/targetfs/{bin,boot,dev,etc,home,lib/{firmware,modules}}
-mkdir -pv ${CLFS}/targetfs/{mnt,opt,proc,sbin,srv,sys}
-mkdir -pv ${CLFS}/targetfs/var/{cache,lib,local,lock,log,opt,run,spool}
-install -dv -m 0750 ${CLFS}/targetfs/root
-install -dv -m 1777 ${CLFS}/targetfs/{var/,}tmp
-mkdir -pv ${CLFS}/targetfs/usr/{,local/}{bin,include,lib,sbin,share,src}
+	echo "===============================================\n==============================================="
+	echo "Creating directories"
+	mkdir -pv ${CLFS}/targetfs/{bin,boot,dev,etc,home,lib/{firmware,modules}}
+	mkdir -pv ${CLFS}/targetfs/{mnt,opt,proc,sbin,srv,sys}
+	mkdir -pv ${CLFS}/targetfs/var/{cache,lib,local,lock,log,opt,run,spool}
+	install -dv -m 0750 ${CLFS}/targetfs/root
+	install -dv -m 1777 ${CLFS}/targetfs/{var/,}tmp
+	mkdir -pv ${CLFS}/targetfs/usr/{,local/}{bin,include,lib,sbin,share,src}
+	echo "===============================================\n==============================================="
 }
 
 function link_mtab(){
-ln -svf ../proc/mounts ${CLFS}/targetfs/etc/mtab
+	echo "===============================================\n==============================================="
+	echo "Creating symbolinc links."
+	ln -svf ../proc/mounts ${CLFS}/targetfs/etc/mtab
 }
 
-function create_root(){
-cat > ${CLFS}/targetfs/etc/passwd << "EOF"
+function create_root(){ 
+	echo "===============================================\n==============================================="
+	echo "Creating passwd file."
+	cat > ${CLFS}/targetfs/etc/passwd << "EOF"
 root::0:0:root:/root:/bin/ash
 EOF
+	echo "===============================================\n==============================================="
 }
 
 function libgcc_s_so_1(){
-cp -v /usr/aarch64-linux-gnu/lib64/libgcc_s.so.1 ${CLFS}/targetfs/lib/libgcc_s.so.1
-# ${CLFS_TARGET}-strip ${CLFS}/targetfs/lib/libgcc_s.so.1
+	echo "===============================================\n==============================================="
+	echo "Coping libgcc_s.so.1 lib64 file."
+	cp -v /usr/aarch64-linux-gnu/lib64/libgcc_s.so.1 ${CLFS}/targetfs/lib/libgcc_s.so.1
+	# ${CLFS_TARGET}-strip ${CLFS}/targetfs/lib/libgcc_s.so.1
 }
 
 function musl(){
-mkdir /home/clfs/linuxfromscratch-sources/musl/build
-cd /home/clfs/linuxfromscratch-sources/musl/build
-../configure CROSS_COMPILE=${CLFS_TARGET}- --prefix=/ --disable-static --target=${CLFS_TARGET}
-make -j$CPUTHREAD
-DESTDIR=${CLFS}/targetfs make install-libs
+	echo "===============================================\n==============================================="
+	echo "Compiling musl."
+	mkdir /home/clfs/linuxfromscratch-sources/musl/build
+	cd /home/clfs/linuxfromscratch-sources/musl/build
+	../configure CROSS_COMPILE=${CLFS_TARGET}- --prefix=/ --disable-static --target=${CLFS_TARGET}
+	make -j$CPUTHREAD
+	DESTDIR=${CLFS}/targetfs/ make install-libs
 }
 
 function busybox(){
-cd /home/clfs/linuxfromscratch-sources/busybox
-
-git checkout $BUSYBOX_BRANCH
-
-# Check if ".config" file exist
-if [ -f ".config"  ]; then
-	# If exist execute
-	make menuconfig
-else
-	# If not, execute
-	make distclean
-	make ARCH=${CLFS_ARCH} defconfig
-	make menuconfig
-fi
-
-sed -i 's/\(CONFIG_\)\(.*\)\(INETD\)\(.*\)=y/# \1\2\3\4 is not set/g' .config
-sed -i 's/\(CONFIG_IFPLUGD\)=y/# \1 is not set/' .config
-sed -i 's/\(CONFIG_FEATURE_WTMP\)=y/# \1 is not set/' .config
-sed -i 's/\(CONFIG_FEATURE_UTMP\)=y/# \1 is not set/' .config
-sed -i 's/\(CONFIG_UDPSVD\)=y/# \1 is not set/' .config
-sed -i 's/\(CONFIG_TCPSVD\)=y/# \1 is not set/' .config
-CC='aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu/' make ARCH="${CLFS_ARCH}" CROSS_COMPIlE="${CLFS_TARGET}-" -j$CPUTHREAD
-make ARCH="${CLFS_ARCH}" CROSS_COMPILE="${CLFS_TARGET}-" CONFIG_PREFIX="${CLFS}/targetfs" install
+	echo "===============================================\n==============================================="
+	echo "Compiling busybox."
+	cd /home/clfs/linuxfromscratch-sources/busybox
+	git checkout $BUSYBOX_BRANCH
+	# Check if ".config" file exist
+	if [ ! -f ".config"  ]; then
+		# If not exist, execute
+		make distclean
+		make ARCH=aarch64 defconfig
+	fi
+	make ARCH=aarch64 menuconfig
+	#sed -i 's/\(CONFIG_\)\(.*\)\(INETD\)\(.*\)=y/# \1\2\3\4 is not set/g' .config
+	#sed -i 's/\(CONFIG_IFPLUGD\)=y/# \1 is not set/' .config
+	#sed -i 's/\(CONFIG_FEATURE_WTMP\)=y/# \1 is not set/' .config
+	#sed -i 's/\(CONFIG_FEATURE_UTMP\)=y/# \1 is not set/' .config
+	#sed -i 's/\(CONFIG_UDPSVD\)=y/# \1 is not set/' .config
+	#sed -i 's/\(CONFIG_TCPSVD\)=y/# \1 is not set/' .config
+	CC='aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu/' make ARCH="${CLFS_ARCH}" CROSS_COMPIlE="${CLFS_TARGET}-" -j$CPUTHREAD
+	make ARCH="${CLFS_ARCH}" CROSS_COMPILE="${CLFS_TARGET}-" CONFIG_PREFIX="${CLFS}/targetfs" install
 }
 
 function ianaetc(){
-cd /home/clfs/linuxfromscratch-sources/iana-etc-2.30
-patch -Np1 -i ../iana-etc-2.30-update-2.patch
-make get
-make STRIP=yes
-make DESTDIR=${CLFS}/targetfs install
+	echo "===============================================\n==============================================="
+	echo "Compiling ianaetc."
+	cd /home/clfs/linuxfromscratch-sources/iana-etc-2.30
+	patch -Np1 -i ../iana-etc-2.30-update-2.patch
+	make get
+	make STRIP=yes
+	make DESTDIR=${CLFS}/targetfs install
 }
 
 function fstab(){
-cat > ${CLFS}/targetfs/etc/fstab << "EOF"
+	echo "===============================================\n==============================================="
+	echo "Creating empty fstab."
+	cat > ${CLFS}/targetfs/etc/fstab << "EOF"
 # file-system  mount-point  type   options          dump  fsck
 EOF
 }
 
-#function linux(){
-#	cd /home/clfs/linuxfromscratch-sources/linux-5.10.9
-#	make mrproper
-#	make ARCH=arm64 defconfig
-#	make ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- menuconfig
-#	ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- make -j$CPUTHREAD Image modules dtbs
-#	make ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- INSTALL_MOD_PATH=${CLFS}/targetfs modules_install
-#	cp arch/arm64/boot/dts/*.dtb $CLFS/targetfs/boot/
-#	cp arch/arm64/boot/dts/overlays/*.dtb* $CLFS/targetfs/boot/overlays/
-#	cp arch/arm64/boot/dts/overlays/README $CLFS/targetfs/boot/overlays/
-#	cp arch/arm64/boot/Image $CLFS/targetfs/boot/blackos.img
-#	echo "kernel=blackos.img" >> $CLFS/targetfs/boot/config.txt
-#}
-
 function cross_scripts(){
+	echo "===============================================\n==============================================="
+	echo "Installing cross_cripts from CLFS."
 	cd /home/clfs/linuxfromscratch-sources/cross-lfs-bootscripts-embedded
 	make DESTDIR=${CLFS}/targetfs install-bootscripts
 }
 
 function mdev(){
-cat > ${CLFS}/targetfs/etc/mdev.conf<< "EOF"
+	echo "===============================================\n==============================================="
+	echo "Creating mdev.conf file."
+	cat > ${CLFS}/targetfs/etc/mdev.conf<< "EOF"
 # /etc/mdev/conf
 
 # Devices:
@@ -221,7 +223,9 @@ EOF
 }
 
 function bprofile(){
-cat > ${CLFS}/targetfs/etc/profile << "EOF"
+	echo "===============================================\n==============================================="
+	echo "Creating etc profile file."
+	cat > ${CLFS}/targetfs/etc/profile << "EOF"
 # /etc/profile
 
 # Set the initial path
@@ -247,7 +251,9 @@ EOF
 
 
 function inittab(){
-cat > ${CLFS}/targetfs/etc/inittab<< "EOF"
+	echo "===============================================\n==============================================="
+	echo "Creating etc inittab file."
+	cat > ${CLFS}/targetfs/etc/inittab<< "EOF"
 # /etc/inittab
 # https://git.busybox.net/busybox/tree/examples/inittab 
 # /etc/inittab init(8) configuration for BusyBox
@@ -352,11 +358,15 @@ EOF
 }
 
 function hostname(){
+	echo "===============================================\n==============================================="
+	echo "Creating hostname."
 	echo "blackos" > ${CLFS}/targetfs/etc/HOSTNAME
 }
 
 function hostfile(){
-cat > ${CLFS}/targetfs/etc/hosts << "EOF"
+	echo "===============================================\n==============================================="
+	echo "Creating hosts file."
+	cat > ${CLFS}/targetfs/etc/hosts << "EOF"
 # Begin /etc/hosts (network card version)
 
 127.0.0.1 localhost blackos
@@ -366,17 +376,16 @@ EOF
 }
 
 function networkinterfaces(){
-
-
-mkdir -pv ${CLFS}/targetfs/etc/network/if-{post-{up,down},pre-{up,down},up,down}.d
-mkdir -pv ${CLFS}/targetfs/usr/share/udhcpc
-
-cat > ${CLFS}/targetfs/etc/network/interfaces << "EOF"
+	echo "===============================================\n==============================================="
+	echo "Creating and configuring network scripts."
+	mkdir -pv ${CLFS}/targetfs/etc/network/if-{post-{up,down},pre-{up,down},up,down}.d
+	mkdir -pv ${CLFS}/targetfs/usr/share/udhcpc
+	cat > ${CLFS}/targetfs/etc/network/interfaces << "EOF"
 auto eth0
 iface eth0 inet dhcp
 EOF
 
-cat > ${CLFS}/targetfs/usr/share/udhcpc/default.script << "EOF"
+	cat > ${CLFS}/targetfs/usr/share/udhcpc/default.script << "EOF"
 #!/bin/sh
 # udhcpc Interface Configuration
 # Based on http://lists.debian.org/debian-boot/2002/11/msg00500.html
@@ -417,49 +426,59 @@ esac
 exit 0
 EOF
 
-chmod +x ${CLFS}/targetfs/usr/share/udhcpc/default.script
+	chmod +x ${CLFS}/targetfs/usr/share/udhcpc/default.script
 }
 
 function dropbear(){
-cd /home/clfs/linuxfromscratch-sources/dropbear
-git checkout $DROPBEAR_TAG
-sed -i 's/.*mandir.*//g' Makefile.in
-CC=$CC CFLAGS="-Os -W -Wall" ./configure --prefix=/usr --host=${CLFS_TARGET} --enable-static --with-zlib=/home/clfs/linuxfromscratch-sources/zlib-1.2.11/
-make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" -j$CPUTHREAD
-make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"  install DESTDIR=${CLFS}/targetfs
-install -dv ${CLFS}/targetfs/etc/dropbear
-cd /home/clfs/linuxfromscratch-sources/cross-lfs-bootscripts-embedded
-make install-dropbear DESTDIR=${CLFS}/targetfs
+	echo "===============================================\n==============================================="
+	echo "Compiling DropBear SSH."
+	cd /home/clfs/linuxfromscratch-sources/dropbear
+	git checkout $DROPBEAR_TAG
+	sed -i 's/.*mandir.*//g' Makefile.in
+	CC=$CC CFLAGS="-Os -W -Wall" ./configure --prefix=/usr --host=${CLFS_TARGET} --enable-static --with-zlib=/home/clfs/linuxfromscratch-sources/zlib-1.2.11/
+	make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" -j$CPUTHREAD
+	make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"  install DESTDIR=${CLFS}/targetfs
+	install -dv ${CLFS}/targetfs/etc/dropbear
+	cd /home/clfs/linuxfromscratch-sources/cross-lfs-bootscripts-embedded
+	make install-dropbear DESTDIR=${CLFS}/targetfs
 }
 
 function wirelesstools(){
-cd /home/clfs/linuxfromscratch-sources/wireless_tools.29
-sed -i s/gcc/\$\{CLFS\_TARGET\}\-gcc/g Makefile
-sed -i s/\ ar/\ \$\{CLFS\_TARGET\}\-ar/g Makefile
-sed -i s/ranlib/\$\{CLFS\_TARGET\}\-ranlib/g Makefile
-make PREFIX=${CLFS}/targetfs/usr -j$CPUTHREAD
-make install PREFIX=${CLFS}/targetfs/usr
+	echo "===============================================\n==============================================="
+	echo "Compiling wirelesstools."
+	cd /home/clfs/linuxfromscratch-sources/wireless_tools.29
+	sed -i s/gcc/\$\{CLFS\_TARGET\}\-gcc/g Makefile
+	sed -i s/\ ar/\ \$\{CLFS\_TARGET\}\-ar/g Makefile
+	sed -i s/ranlib/\$\{CLFS\_TARGET\}\-ranlib/g Makefile
+	make PREFIX=${CLFS}/targetfs/usr -j$CPUTHREAD
+	make install PREFIX=${CLFS}/targetfs/usr
 }
 
 function netplug(){
-cd /home/clfs/linuxfromscratch-sources/netplug-1.2.9.2
-patch -Np1 -i ../netplug-1.2.9.2-fixes-1.patch
-make -j$CPUTHREAD
-make DESTDIR=${CLFS}/targetfs install
+	echo "===============================================\n==============================================="
+	echo "Compiling netplug."
+	cd /home/clfs/linuxfromscratch-sources/netplug-1.2.9.2
+	patch -Np1 -i ../netplug-1.2.9.2-fixes-1.patch
+	make -j$CPUTHREAD
+	make DESTDIR=${CLFS}/targetfs install
 }
 
 function zlib(){
-cd /home/clfs/linuxfromscratch-sources/zlib
-git checkout $ZLIB_TAG
-CC=$CC CFLAGS="-Os" ./configure --shared
-make
-make prefix=${CLFS}/cross-tools/${CLFS_TARGET} install
-cp -v ${CLFS}/cross-tools/${CLFS_TARGET}/lib/libz.so.1.2.11 ${CLFS}/targetfs/lib/
-ln -sv libz.so.1.2.11 ${CLFS}/targetfs/lib/libz.so.1
+	echo "===============================================\n==============================================="
+	echo "Compiling zlib."
+	cd /home/clfs/linuxfromscratch-sources/zlib
+	git checkout $ZLIB_TAG
+	CC=$CC CFLAGS="-Os" ./configure --shared
+	make
+	make prefix=${CLFS}/cross-tools/${CLFS_TARGET} install
+	cp -v ${CLFS}/cross-tools/${CLFS_TARGET}/lib/libz.so.1.2.11 ${CLFS}/targetfs/lib/
+	ln -sv libz.so.1.2.11 ${CLFS}/targetfs/lib/libz.so.1
 }
 
 function os-release(){
-cat << EOF > ${CLFS}/targetfs/etc/os-release
+	echo "===============================================\n==============================================="
+	echo "Creating os-release file."
+	cat << EOF > ${CLFS}/targetfs/etc/os-release
 NAME="BlackOS Linux"
 PRETTY_NAME="BlackOS Linux"
 ID=blackos
@@ -469,6 +488,8 @@ EOF
 }
 
 function ownership_tarball(){
+	echo "===============================================\n==============================================="
+	echo "Creating tarball."
 su -c "chown -Rv root:root ${CLFS}/targetfs"
 su -c "chgrp -v 13 ${CLFS}/targetfs/var/log/lastlog"
 install -dv ${CLFS}/build

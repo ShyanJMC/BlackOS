@@ -11,7 +11,7 @@ set +h
 umask 022
 CLFS=/home/clfs/BlackOS
 LC_ALL=POSIX
-PATH=/usr/aarch64-linux-gnu/bin:/usr/aarch64-linux-gnu/usr/bin:/usr/aarch64-linux-gnu/usr/sbin:/bin:/usr/bin:/usr/local/bin
+PATH=/bin:/usr/bin:/usr/local/bin:/usr/aarch64-linux-gnu/bin:/usr/aarch64-linux-gnu/usr/bin:/usr/aarch64-linux-gnu/usr/sbin
 export CLFS LC_ALL PATH
 
 export ARCH="aarch64"
