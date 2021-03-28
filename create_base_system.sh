@@ -574,6 +574,7 @@ busybox
 eudev
 openrc
 openrc_scripts
+eudev_openrc_scripts
 ianaetc
 fstab
 linux
