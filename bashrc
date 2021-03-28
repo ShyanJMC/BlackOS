@@ -23,8 +23,8 @@ export CROSS_COMPILE=aarch64-linux-gnu-
 
 
 # Architecture Version
-export CC="${CROSS_COMPILE}gcc --sysroot=/usr/aarch64-linux-gnu/"
-export CXX="${CROSS_COMPILE}g++ --sysroot=/usr/aarch64-linux-gnu/"
+export CC="${CROSS_COMPILE}gcc --sysroot=/usr/aarch64-linux-gnu/ -I/usr/aarch64-linux-gnu/include -I/usr/aarch64-linux-gnu/usr/include/"
+export CXX="${CROSS_COMPILE}g++ --sysroot=/usr/aarch64-linux-gnu/ -I/usr/aarch64-linux-gnu/include -I/usr/aarch64-linux-gnu/usr/include/"
 export AR="${CROSS_COMPILE}ar"
 export AS="${CROSS_COMPILE}as"
 export LD="${CROSS_COMPILE}ld --sysroot=/usr/aarch64-linux-gnu/"
