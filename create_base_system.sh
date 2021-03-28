@@ -100,8 +100,7 @@ function eudev(){
 	cd ${WORK_DIR}/eudev
 	git checkout $EUDEV_TAG
 	autoreconf -f -i -s
-	./configure --host=aarch64-unknown-linux-gnu --prefix=/home/clfs/BlackOS/targetfs/ --disable-manpages \
- --disable-selinux --enable-introspection=yes --with-sysroot=/usr/aarch64-linux-gnu
+	./configure --host=aarch64-unknown-linux-gnu --prefix=/home/clfs/BlackOS/targetfs/ --disable-manpages --disable-selinux --enable-introspection=yes --with-sysroot=/usr/aarch64-linux-gnu --enable-hwdb
 	make -j4
 	make install
 }
@@ -120,198 +119,7 @@ PREFIX=/home/clfs/BlackOS/targetfs install
 
 function openrc_scripts(){
 	echo -e "===============================================\n==============================================="
-	echo -e "Creating OpenRC init.d files for udev, udhcpc and login."
-	cat > ${CLFS}/targetfs/etc/init.d/eudev << "EOF"
-#!@RUNSCRIPT@
-# Copyright 1999-2010 Gentoo Fundation
-# Distributed under the terms of GNU General Public License v2
-
-command=/usr/bin/udevd
-description="eudev from Gentoo. Udev for friends. Udev manages device permissions and symbolic links in /dev"
-extra_started_commands="reload"
-description_reload="Reload the udev rules and databases"
-rc_coldplug=${rc_coldplug:-${RC_COLDPLUG:-YES}}
-udev_debug="${udev_debug:-no}"
-udev_monitor="${udev_monitor:-no}"
-udev_monitor_keep_running="${udev_monitor_keep_running:-no}"
-udev_settle_timeout="${udev_settle_timeout:-60}"
-kv_min="${kv_min:-2.6.34}"
-
-depend()
-{
-    # we depend on udev-mount explicitly, not dev-mount generic as we don't
-    # want mdev as a dev-mount provider to come in.
-    provide dev
-    need sysfs udev-mount
-    before checkfs fsck
-
-    # udev does not work inside vservers
-    keyword -vserver -lxc
-}
-
-KV_to_int()
-{
-    [ -z $1 ] && return 1
-
-    local x=${1%%[!0-9.]*} y= z=
-    local KV_MAJOR=${x%%.*}
-    y=${x#*.}
-    [ "$x" = "$y" ] && y=0.0
-    local KV_MINOR=${y%%.*}
-    z=${y#*.}
-    [ "$y" = "$z" ] && z=0
-    local KV_MICRO=${z%%.*}
-    local KV_int=$((${KV_MAJOR} * 65536 + ${KV_MINOR} * 256 + ${KV_MICRO} ))
-
-    # We make version 2.2.0 the minimum version we will handle as
-    # a sanity check ... if its less, we fail ...
-    [ "${KV_int}" -lt 131584 ] && return 1
-
-    echo "${KV_int}"
-}
-
-_RC_GET_KV_CACHE=""
-get_KV()
-{
-    if [ -z "${_RC_GET_KV_CACHE}" ] ; then
-        _RC_GET_KV_CACHE="$(uname -r)"
-    fi
-    echo "$(KV_to_int "${_RC_GET_KV_CACHE}")"
-    return $?
-}
-
-# FIXME
-# Instead of this script testing kernel version, udev itself should
-# Maybe something like udevd --test || exit $?
-check_kernel()
-{
-    if [ $(get_KV) -lt $(KV_to_int ${kv_min}) ]; then
-        eerror "Your kernel is too old to work with this version of udev."
-        eerror "Current udev only supports Linux kernel ${kv_min} and newer."
-        return 1
-    fi
-    return 0
-}
-
-start_pre()
-{
-    check_kernel || return 1
-    if [ -e /proc/sys/kernel/hotplug ]; then
-        echo "" >/proc/sys/kernel/hotplug
-    fi
-
-    # load unix domain sockets if built as module, Bug #221253
-    # and not yet loaded, Bug #363549
-    if [ ! -e /proc/net/unix ]; then
-        if ! modprobe unix; then
-            eerror "Cannot load the unix domain socket module"
-        fi
-    fi
-
-    if yesno "${udev_debug}"; then
-        command_args="${command_args} --debug 2> /run/udevdebug.log"
-    fi
-}
-
-is_service_enabled()
-{
-    local svc="$1"
-
-    [ ! -e "/etc/init.d/${svc}" ] && return 1
-
-    [ -e "/etc/runlevels/${RC_BOOTLEVEL}/${svc}" ] && return 0
-    [ -e "/etc/runlevels/${RC_DEFAULTLEVEL}/${svc}" ] && return 0
-    return 1
-}
-
-disable_oldnet_hotplug()
-{
-    if is_service_enabled network; then
-        # disable network hotplugging
-        local f="/run/udev/rules.d/90-network.rules"
-        echo "# This file disables network hotplug events calling" >> "${f}"
-        echo "# old-style openrc net scripts" >> "${f}"
-        echo "# as we use /etc/init.d/network to set up our network" >> "${f}"
-    fi
-}
-
-start_udevmonitor()
-{
-    yesno "${udev_monitor}" || return 0
-
-    udevmonitor_log=/run/udevmonitor.log
-    udevmonitor_pid=/run/udevmonitor.pid
-
-    einfo "udev: Running udevadm monitor ${udev_monitor_opts} to log all events"
-    start-stop-daemon --start --stdout "${udevmonitor_log}" \
-        --make-pidfile --pidfile "${udevmonitor_pid}" \
-        --background --exec /sbin/udevadm -- monitor ${udev_monitor_opts}
-}
-
-populate_dev()
-{
-    if get_bootparam "nocoldplug" ; then
-        rc_coldplug="NO"
-        ewarn "Skipping udev coldplug as requested in kernel cmdline"
-    fi
-
-    ebegin "Populating /dev with existing devices through uevents"
-    if ! yesno "${rc_coldplug}"; then
-        # Do not run any init-scripts, Bug #206518
-        udevadm control --property=do_not_run_plug_service=1
-    fi
-    udevadm trigger --type=subsystems --action=add
-    udevadm trigger --type=devices --action=add
-    eend $?
-    ebegin "Waiting for uevents to be processed"
-    udevadm settle --timeout=${udev_settle_timeout}
-    eend $?
-    udevadm control --property=do_not_run_plug_service=
-    return 0
-}
-
-stop_udevmonitor()
-{
-    yesno "${udev_monitor}" || return 0
-
-    if yesno "${udev_monitor_keep_running}"; then
-        ewarn "udev: udevmonitor is still running and writing into ${udevmonitor_log}"
-    else
-        einfo "udev: Stopping udevmonitor: Log is in ${udevmonitor_log}"
-        start-stop-daemon --stop --pidfile "${udevmonitor_pid}" --exec /sbin/udevadm
-    fi
-}
-
-display_hotplugged_services()
-{
-    local svcfile= svc= services=
-    for svcfile in "${RC_SVCDIR}"/hotplugged/*; do
-        svc="${svcfile##*/}"
-        [ -x "${svcfile}" ] || continue
-
-        services="${services} ${svc}"
-    done
-    [ -n "${services}" ] && einfo "Device initiated services:${HILITE}${services}${NORMAL}"
-}
-
-start_post()
-{
-    disable_oldnet_hotplug
-    start_udevmonitor
-    populate_dev
-    stop_udevmonitor
-    display_hotplugged_services
-    return 0
-}
-
-reload()
-{
-    ebegin "reloading udev rules and databases"
-    udevadm control --reload
-    eend $?
-}
-EOF
-
+	echo -e "Creating OpenRC init.d files for udhcpc and login."
 cat > ${CLFS}/targetfs/etc/init.d/udhcpc << EOF
 command=/usr/bin/udhcpc
 pidfile=/var/run/udhcpc.pid
@@ -322,6 +130,15 @@ cat > ${CLFS}/targetfs/etc/init.d/login << EOF
 command=/usr/bin/login
 name="Login program."
 EOF
+}
+
+function eudev_openrc_scripts(){
+	echo -e "===============================================\n==============================================="
+        echo -e "Creating OpenRC init.d files for udev."
+	cd ${WORD_DIR}/udev-gentoo-scripts
+	# Add text to the first line
+	sed -i '1 i\DESTDIR=${CLFS}/targetfs/' Makefile
+	make install
 }
 
 function ianaetc(){
