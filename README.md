@@ -10,7 +10,20 @@ In the first steps of this proyect, I built BlackOS for Raspberry Pi and Pine Ro
 If you need more documentation about the project, go to the folder "Documentation".
 
 # How to use it
-Go to "Releases" page, download the release of your chooice. Then uncompress it, compile the kernel and follow the indications for your Single Board Computer model and then boot.
+Go to "Releases" page, download the release of your chooice. Then uncompress it, compile the kernel and follow the indications for your Single Board Computer model and then boot. Also I was mentioned before, is best that you copy the kernel and firmware from a working distro in /boot and /modules and change "cmdline.txt" or the respective file to load the right partition and the right init; "/sbin/init".
+
+# Enumeration and name convention
+BlackOS follow this standard to enumerate the releases;
+
+> [MV].[NF].[NFI]-[ABS]
+
+MV: Major release version. v1 v2 v3 etc. Major Release means a major update or upgrade to the Software, which includes significant enhancements and/or a major redesign of the Software.
+
+NF: Number of Features. Indicate the number of features included into the major release.
+
+NFI: Number of FIxes. Indicate the number of features included into the major release, at higher number more fixes are in those major release version.
+
+ABS: Alpha Beta Stable. Indicate the state of the current release. "Alpha" means the release is in current development and is not stable, also expect a higher number of changes/fixes in the software. "Beta" means the release is in quality tests to fix issues and is not stable yet and ready to use in production. "Stable" means the release was tested and is considered ready for production.
 
 ## Files
 > bashrc

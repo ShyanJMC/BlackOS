@@ -64,6 +64,15 @@ function libgcc_s_so_1(){
 	# ${CLFS_TARGET}-strip ${CLFS}/targetfs/lib/libgcc_s.so.1
 }
 
+function sync_repo(){
+	echo -e "===============================================\n==============================================="
+	echo -e "Sync repositories."
+	cd ${WORK_DIR}
+	git submodule init
+	git submodule sync
+	git submodule update --recursive
+}
+
 function musl(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Compiling musl."
@@ -101,6 +110,9 @@ function eudev(){
 	git checkout $EUDEV_TAG
 	autoreconf -f -i -s
 	./configure --host=aarch64-unknown-linux-gnu --prefix=/home/clfs/BlackOS/targetfs/ --disable-manpages --disable-selinux --enable-introspection=yes --with-sysroot=/usr/aarch64-linux-gnu --enable-hwdb
+	# As BlackOS have al bin directories as links to /usr/bin, the below line change the force of creation of symlink to avoid issues.
+	sed -i '1209d' src/udev/Makefile
+	sed -i '1208s/||//' src/udev/Makefile
 	make -j4
 	make install
 }
@@ -115,6 +127,13 @@ PREFIX=/home/clfs/BlackOS/targetfs
 BRANDING=\"BlackOS\" PKG_PREFIX=/home/clfs/BlackOS/targetfs/usr/pkg LOCAL_PREFIX=/home/clfs/BlackOS/targetfs/usr/local \
 PREFIX=/home/clfs/BlackOS/targetfs install 
 
+	echo -e "Re writing some symlinks to avoid issues."
+	rm ${CLFS}/targetfs/usr/bin/{rc-sstat,reboot,poweroff,shutdown,halt}
+	ln -s ../libexec/rc/bin/rc-sstat ${CLFS}/targetfs/usr/bin/rc-sstat
+	ln -s ../libexec/rc/bin/halt ${CLFS}/targetfs/usr/bin/halt
+	ln -s ../libexec/rc/bin/poweroff ${CLFS}/targetfs/usr/bin/poweroff
+	ln -s ../libexec/rc/bin/reboot ${CLFS}/targetfs/usr/bin/reboot
+	ln -s ../libexec/rc/bin/shutdown ${CLFS}/targetfs/usr/bin/shutdown
 }
 
 function openrc_scripts(){
@@ -135,7 +154,7 @@ EOF
 function eudev_openrc_scripts(){
 	echo -e "===============================================\n==============================================="
         echo -e "Creating OpenRC init.d files for udev."
-	cd ${WORD_DIR}/udev-gentoo-scripts
+	cd ${WORK_DIR}/udev-gentoo-scripts
 	# Add text to the first line
 	sed -i '1 i\DESTDIR=${CLFS}/targetfs/' Makefile
 	make install
@@ -569,6 +588,7 @@ create_folders
 link_mtab
 create_root
 libgcc_s_so_1
+sync_repo
 musl
 busybox
 eudev
