@@ -3,9 +3,7 @@ A Linux system from scratch designed for ARMv8 System On a Chip (known as SOC).
 
 It is designed to be as minimal as possible, so you will find a very basic and minimal system. The reason for this is you can adapt your applications to your requeriments. 
 
-Think about this system like a minimal OS for to rebuild the humanity if you are in an apocalypse or in a place without Internet connection and you have only a few SBCs without much power and need digital services. In the future I will provide you with the source code of some projects like Lighttpd and others, so you can quickly copy it inside BlackOS and compile them.
-
-In the first steps of this proyect, I built BlackOS for Raspberry Pi and Pine Rock64 but considering that there are so many SBCs in the world(each one with specifics configurations to boot), I chose to make a Linux system without kernel. So, you will have to download the release, then compile the kernel for the ARCH target and finally you will have to integrate the firmware and the bootloader inside "/boot" and modules in "/lib/modules" folders to boot BlackOS, it is easier and makes BlackOS more portable. 
+Think about this system like a minimal OS for to rebuild the humanity if you are in an apocalypse or in a place without Internet connection and you have only a few SBCs without much power and need digital services. 
 
 If you need more documentation about the project, go to the folder "Documentation".
 
