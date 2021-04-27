@@ -1,5 +1,30 @@
+
+- Version: v0.5.6-alpha
+- Responsible: ShyanJMC (Joaquin Manuel Crespo)
+- Increase: Two new features.
+- Target: ARMv8
+- Usable: Yes, but isn't pacman yet.
+- Changelog:
+-- Added eudev (from Gentoo).
+-- Added OpenRC init (from Gentoo).
+-- Added scripts for OpenRC.
+=====================================================================
+=====================================================================
+25/03/2021:
+- Version: v0.3.6-R2-alpha
+- Responsible: ShyanJMC (Joaquin Manuel Crespo)
+- Increase: not.
+- Target: ARMv8
+- Usable; Yes, but still there are some issues with netplug and
+dhcp.
+- Changelog:
+-- Nothing, just re-build the release a new cross toolchain from Arch
+Linux.
+=====================================================================
+=====================================================================
 20/02/2021:
 - Version: v0.3.6-alpha
+- Responsible: ShyanJMC (Joaquin Manuel Crespo)
 - Increase: One fix.
 - Target: ARMv8
 - Usable: Yes, but still there are some issues with netplug and
@@ -10,6 +35,7 @@ dhcp.
 =====================================================================
 19/02/2021:
 - Version: v0.3.5-alpha
+- Responsible: ShyanJMC (Joaquin Manuel Crespo)
 - Increase: Tree fixes.
 - Target: ARMv8
 - Usable: Yes, but still there are many issues to fix.
@@ -22,6 +48,7 @@ in this case I compiled BusyBox as static.
 =====================================================================
 25/01/2021:
 - Version: v0.3.2-alpha
+- Responsible: ShyanJMC (Joaquin Manuel Crespo)
 - Increase: One new feature and two fixes.
 - Target: ARMv8
 - Usable: Not yet.
@@ -34,6 +61,7 @@ in this case I compiled BusyBox as static.
 =====================================================================
 20/01/2021:
 - Version: v0.2.0-alpha
+- Responsible: ShyanJMC (Joaquin Manuel Crespo)
 - Increase: One new feature.
 - Target: ARMv7
 - Usable: Not yet.
@@ -45,6 +73,7 @@ in this case I compiled BusyBox as static.
 =====================================================================
 18/01/2021:
 - Version: v0.1.0-alpha
+- Responsible: ShyanJMC (Joaquin Manuel Crespo)
 - Target: ARMv8
 - Usable: Not yet.
 - Changelog:

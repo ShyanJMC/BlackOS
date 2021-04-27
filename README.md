@@ -1,11 +1,17 @@
 # BlackOS
-A Linux system from scratch designed for ARMv8 System On a Chip (known as SOC). 
+A Linux system from scratch designed for AArch64 (ARM 64 bits; ARMv8, ARMv9 and futher). 
 
 It is designed to be as minimal as possible, so you will find a very basic and minimal system. The reason for this is you can adapt your applications to your requeriments. 
 
 Think about this system like a minimal OS for to rebuild the humanity if you are in an apocalypse or in a place without Internet connection and you have only a few SBCs without much power and need digital services. 
 
 If you need more documentation about the project, go to the folder "Documentation".
+
+# Requirements
+
+> "aarch64-unknown-linux-gnu" toolchain
+
+> rust and cargo
 
 # How to use it
 Go to "Releases" page, download the release of your chooice. Then uncompress it, compile the kernel and follow the indications for your Single Board Computer model and then boot. Also I was mentioned before, is best that you copy the kernel and firmware from a working distro in /boot and /modules and change "cmdline.txt" or the respective file to load the right partition and the right init; "/sbin/init".
