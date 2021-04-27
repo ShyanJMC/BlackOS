@@ -2,56 +2,72 @@
 # Maintainer;	ShyanJMC (Joaquin Manuel Crespo)
 # Autor:	ShyanJMC (Joaquin Manuel Crespo)
 # Email:	joaquincrespo96@gmail.com
+# Email:	shyanjmc@protonmail.com
+# Email:	shyan@shyanjmc.com
 # Copyright; 	2021(c)
 
 ################################################
 ############## Variables zone ##################
 ################################################
 
+export CLFS=/targetfs
 export CPUTHREAD=$(cat /proc/cpuinfo | grep processor | wc | cut -d' ' -f7)
 export BUSYBOX_BRANCH=remotes/origin/1_32_stable
 export DROPBEAR_TAG=tag/DROPBEAR_2020.81
 export ZLIB_TAG=tags/v1.2.11
-export WORK_DIR=/home/clfs/linuxfromscratch-sources/
+export WORK_DIR=/linuxfromscratch-sources
+export BUILD_DIR=/build
 export EUDEV_TAG=tags/v3.2.10
 export OPENRC_BRACH=remotes/origin/HEAD
+export NUSHELL_BRACH=main
+export CROSS_TOOLS=/crosstools
 
 ###########################################################################
 ######################## Functions zone ###################################
 ###########################################################################
 
+function prebuild(){
+	mkdir -p /crosstools/lib
+	pacman -Syuq --needed --noconfirm base-devel rustup community/aarch64-linux-gnu-gcc community/aarch64-linux-gnu-gdb community/aarch64-linux-gnu-glibc community/aarch64-linux-gnu-linux-api-headers git 
+	git clone https://github.com/ShyanJMC/LinuxFromScratch-Sources
+	cd ${WORK_DIR}/
+	git submodule init && git submodule sync && git submodule update --recursive
+	rustup toolchain install stable-aarch64-unknown-linux-gnu
+	rustup target add aarch64-unknown-linux-gnu
+}
+
+
 function create_folders(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Creating directories"
-	mkdir -pv ${CLFS}/targetfs/{boot,dev,etc,home,}
-	mkdir -pv ${CLFS}/targetfs/{mnt,opt,proc,srv,sys}
-	mkdir -pv ${CLFS}/targetfs/var/{cache,lib,local,lock,log,opt,spool}
-	install -dv -m 0750 ${CLFS}/targetfs/root
-	install -dv -m 1777 ${CLFS}/targetfs/{var/,}tmp
-	mkdir -pv ${CLFS}/targetfs/usr/{,local/}{bin,include,lib,sbin,share,src}
-	ln -s usr/lib ${CLFS}/targetfs/lib
-	ln -s usr/lib ${CLFS}/targetfs/lib64
-	ln -s usr/bin ${CLFS}/targetfs/bin
-	ln -s usr/bin ${CLFS}/targetfs/sbin
-	ln -s ../run ${CLFS}/targetfs/var/run
-	ln -s ../run/lock ${CLFS}/targetfs/var/lock
-	ln -s spool/mail ${CLFS}/targetfs/var/mail
-	ln -s lib ${CLFS}/targetfs/usr/lib64
-	mkdir -pv ${CLFS}/targetfs/lib/{firmware,modules}
-	touch ${CLFS}/targetfs/var/log/lastlog
+	mkdir -pv ${CLFS}/{boot,dev,etc,home,}
+	mkdir -pv ${CLFS}/{mnt,opt,proc,srv,sys}
+	mkdir -pv ${CLFS}/var/{cache,lib,local,lock,log,opt,spool}
+	install -dv -m 0750 ${CLFS}/root
+	install -dv -m 1777 ${CLFS}/{var/,}tmp
+	mkdir -pv ${CLFS}/usr/{,local/}{bin,include,lib,lib64,sbin,share,src}
+	ln -s usr/lib ${CLFS}/lib
+	ln -s usr/bin ${CLFS}/bin
+	ln -s usr/sbin ${CLFS}/sbin
+	ln -s usr/lib64 ${CLFS}/lib64
+	ln -s ../run ${CLFS}/var/run
+	ln -s ../run/lock ${CLFS}/var/lock
+	ln -s spool/mail ${CLFS}/var/mail
+	mkdir -pv ${CLFS}/lib/{firmware,modules}
+	touch ${CLFS}/var/log/lastlog
 	echo -e "===============================================\n==============================================="
 }
 
 function link_mtab(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Creating symbolinc links."
-	ln -svf ../proc/mounts ${CLFS}/targetfs/etc/mtab
+	ln -svf ../proc/mounts ${CLFS}/etc/mtab
 }
 
 function create_root(){ 
 	echo -e "===============================================\n==============================================="
 	echo "Creating passwd file."
-	cat > ${CLFS}/targetfs/etc/passwd << "EOF"
+	cat > ${CLFS}/etc/passwd << "EOF"
 root::0:0:root:/root:/bin/ash
 EOF
 	echo -e "===============================================\n==============================================="
@@ -60,8 +76,8 @@ EOF
 function libgcc_s_so_1(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Coping libgcc_s.so.1 lib64 file."
-	cp -v /usr/aarch64-linux-gnu/lib64/libgcc_s.so.1 ${CLFS}/targetfs/lib/libgcc_s.so.1
-	# ${CLFS_TARGET}-strip ${CLFS}/targetfs/lib/libgcc_s.so.1
+	cp -v /usr/aarch64-linux-gnu/lib64/libgcc_s.so.1 ${CLFS}/lib/libgcc_s.so.1
+	# ${CLFS_TARGET}-strip ${CLFS}/lib/libgcc_s.so.1
 }
 
 function sync_repo(){
@@ -80,36 +96,22 @@ function musl(){
 	cd ${WORK_DIR}/musl/build
 	../configure CROSS_COMPILE=${CLFS_TARGET}- --prefix=/ --disable-static --target=${CLFS_TARGET}
 	make -j$CPUTHREAD
-	DESTDIR=${CLFS}/targetfs/ make install-libs
+	DESTDIR=${CLFS}/ make install-libs
 }
 
-function busybox(){
-	echo -e "===============================================\n==============================================="
-	echo -e "Compiling busybox."
-	cd ${WORK_DIR}/busybox
-	git checkout $BUSYBOX_BRANCH
-	# Check if ".config" file exist
-	if [ ! -f ".config"  ]; then
-		# If not exist, execute
-		make distclean
-		make ARCH=aarch64 defconfig
-	fi
-	make ARCH=aarch64 menuconfig
-	#sed -i 's/\(CONFIG_\)\(.*\)\(INETD\)\(.*\)=y/# \1\2\3\4 is not set/g' .config
-	#sed -i 's/\(CONFIG_IFPLUGD\)=y/# \1 is not set/' .config
-	#sed -i 's/\(CONFIG_FEATURE_WTMP\)=y/# \1 is not set/' .config
-	#sed -i 's/\(CONFIG_FEATURE_UTMP\)=y/# \1 is not set/' .config
-	#sed -i 's/\(CONFIG_UDPSVD\)=y/# \1 is not set/' .config
-	#sed -i 's/\(CONFIG_TCPSVD\)=y/# \1 is not set/' .config
-	make ARCH="${CLFS_ARCH}" CROSS_COMPIlE="${CLFS_TARGET}-" -j$CPUTHREAD
-	make ARCH="${CLFS_ARCH}" CROSS_COMPILE="${CLFS_TARGET}-" CONFIG_PREFIX="${CLFS}/targetfs" install
+function nushell(){
+	echo "Compiling nushell"
+	cd ${WORK_DIR}/rust-lang-coreutils_alternatives/nushell
+	git checkout $NUSHELL_BRACH
+	cargo build --target aarch64-unknown-linux-gnu --release
+
 }
 
 function eudev(){
 	cd ${WORK_DIR}/eudev
 	git checkout $EUDEV_TAG
 	autoreconf -f -i -s
-	./configure --host=aarch64-unknown-linux-gnu --prefix=/home/clfs/BlackOS/targetfs/ --disable-manpages --disable-selinux --enable-introspection=yes --with-sysroot=/usr/aarch64-linux-gnu --enable-hwdb
+	./configure --host=aarch64-unknown-linux-gnu --prefix=/targetfs/ --disable-manpages --disable-selinux --enable-introspection=yes --with-sysroot=/usr/aarch64-linux-gnu --enable-hwdb
 	# As BlackOS have al bin directories as links to /usr/bin, the below line change the force of creation of symlink to avoid issues.
 	sed -i '1209d' src/udev/Makefile
 	sed -i '1208s/||//' src/udev/Makefile
@@ -120,32 +122,26 @@ function eudev(){
 function openrc(){
 	cd ${WORK_DIR}/openrc
 	git checkout ${OPENRC_BRACH}
-	DESDIT=/home/clfs/BlackOS/targetfs make PROGLDFLAGS=-static LIBNAME=lib64 MKNET=no MKPREFIX=yes MKSELINUX=no MKSYSVINIT=yes \
-BRANDING=\"BlackOS\" PKG_PREFIX=/home/clfs/BlackOS/targetfs/usr/pkg LOCAL_PREFIX=/home/clfs/BlackOS/targetfs/usr/local \
-PREFIX=/home/clfs/BlackOS/targetfs
-	DESDIT=/home/clfs/BlackOS/targetfs make PROGLDFLAGS=-static LIBNAME=lib64 MKNET=no MKPREFIX=yes MKSELINUX=no MKSYSVINIT=yes \
-BRANDING=\"BlackOS\" PKG_PREFIX=/home/clfs/BlackOS/targetfs/usr/pkg LOCAL_PREFIX=/home/clfs/BlackOS/targetfs/usr/local \
-PREFIX=/home/clfs/BlackOS/targetfs install 
+	DESDIT=${CLFS} make PROGLDFLAGS=-static LIBNAME=lib64 MKNET=no MKPREFIX=yes MKSELINUX=no MKSYSVINIT=yes \
+BRANDING=\"BlackOS\" PKG_PREFIX=${CLFS}/usr/pkg LOCAL_PREFIX=${CLFS}/usr/local \
+PREFIX=${CLFS}
+	DESDIT=${CLFS} make PROGLDFLAGS=-static LIBNAME=lib64 MKNET=no MKPREFIX=yes MKSELINUX=no MKSYSVINIT=yes \
+BRANDING=\"BlackOS\" PKG_PREFIX=${CLFS}/usr/pkg LOCAL_PREFIX=${CLFS}/usr/local \
+PREFIX=${CLFS} install 
 
 	echo -e "Re writing some symlinks to avoid issues."
-	rm ${CLFS}/targetfs/usr/bin/{rc-sstat,reboot,poweroff,shutdown,halt}
-	ln -s ../libexec/rc/bin/rc-sstat ${CLFS}/targetfs/usr/bin/rc-sstat
-	ln -s ../libexec/rc/bin/halt ${CLFS}/targetfs/usr/bin/halt
-	ln -s ../libexec/rc/bin/poweroff ${CLFS}/targetfs/usr/bin/poweroff
-	ln -s ../libexec/rc/bin/reboot ${CLFS}/targetfs/usr/bin/reboot
-	ln -s ../libexec/rc/bin/shutdown ${CLFS}/targetfs/usr/bin/shutdown
+	rm ${CLFS}/usr/bin/{rc-sstat,reboot,poweroff,shutdown,halt}
+	ln -s ../libexec/rc/bin/rc-sstat ${CLFS}/usr/bin/rc-sstat
+	ln -s ../libexec/rc/bin/halt ${CLFS}/usr/bin/halt
+	ln -s ../libexec/rc/bin/poweroff ${CLFS}/usr/bin/poweroff
+	ln -s ../libexec/rc/bin/reboot ${CLFS}/usr/bin/reboot
+	ln -s ../libexec/rc/bin/shutdown ${CLFS}/usr/bin/shutdown
 }
 
 function openrc_scripts(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Creating OpenRC init.d files for udhcpc and login."
-cat > ${CLFS}/targetfs/etc/init.d/udhcpc << EOF
-command=/usr/bin/udhcpc
-pidfile=/var/run/udhcpc.pid
-name="UDHCPC an DHCP Client Daemon"
-EOF
-
-cat > ${CLFS}/targetfs/etc/init.d/login << EOF
+cat > ${CLFS}/etc/init.d/login << EOF
 command=/usr/bin/login
 name="Login program."
 EOF
@@ -156,7 +152,7 @@ function eudev_openrc_scripts(){
         echo -e "Creating OpenRC init.d files for udev."
 	cd ${WORK_DIR}/udev-gentoo-scripts
 	# Add text to the first line
-	sed -i '1 i\DESTDIR=${CLFS}/targetfs/' Makefile
+	sed -i '1 i\DESTDIR=${CLFS}/' Makefile
 	make install
 }
 
@@ -167,142 +163,21 @@ function ianaetc(){
 	patch -Np1 -i ../iana-etc-2.30-update-2.patch
 	make get
 	make STRIP=yes
-	make DESTDIR=${CLFS}/targetfs install
+	make DESTDIR=${CLFS} install
 }
 
 function fstab(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Creating empty fstab."
-	cat > ${CLFS}/targetfs/etc/fstab << "EOF"
+	cat > ${CLFS}/etc/fstab << "EOF"
 # file-system  mount-point  type   options          dump  fsck
 EOF
-}
-
-#function cross_scripts(){
-#	echo -e "===============================================\n==============================================="
-#	echo -e "Installing cross_cripts from CLFS."
-#	cd /home/clfs/linuxfromscratch-sources/cross-lfs-bootscripts-embedded
-#	make DESTDIR=${CLFS}/targetfs install-bootscripts
-#}
-
-function mdev(){
-	echo -e "===============================================\n==============================================="
-	echo -e "Creating mdev.conf file."
-	cat > ${CLFS}/targetfs/etc/mdev.conf<< "EOF"
-# /etc/mdev/conf
-
-# Devices:
-# Syntax: %s %d:%d %s
-# devices user:group mode
-
-# null does already exist; therefore ownership has to be changed with command
-null    root:root 0666  @chmod 666 $MDEV
-zero    root:root 0666
-grsec   root:root 0660
-full    root:root 0666
-
-random  root:root 0666
-urandom root:root 0444
-hwrandom root:root 0660
-
-# console does already exist; therefore ownership has to be changed with command
-#console        root:tty 0600   @chmod 600 $MDEV && mkdir -p vc && ln -sf ../$MDEV vc/0
-console root:tty 0600 @mkdir -pm 755 fd && cd fd && for x in 0 1 2 3 ; do ln -sf /proc/self/fd/$x $x; done
-
-fd0     root:floppy 0660
-kmem    root:root 0640
-mem     root:root 0640
-port    root:root 0640
-ptmx    root:tty 0666
-
-# ram.*
-ram([0-9]*)     root:disk 0660 >rd/%1
-loop([0-9]+)    root:disk 0660 >loop/%1
-sd[a-z].*       root:disk 0660 */lib/mdev/usbdisk_link
-hd[a-z][0-9]*   root:disk 0660 */lib/mdev/ide_links
-md[0-9]         root:disk 0660
-
-tty             root:tty 0666
-tty[0-9]        root:root 0600
-tty[0-9][0-9]   root:tty 0660
-ttyS[0-9]*      root:tty 0660
-pty.*           root:tty 0660
-vcs[0-9]*       root:tty 0660
-vcsa[0-9]*      root:tty 0660
-
-ttyLTM[0-9]     root:dialout 0660 @ln -sf $MDEV modem
-ttySHSF[0-9]    root:dialout 0660 @ln -sf $MDEV modem
-slamr           root:dialout 0660 @ln -sf $MDEV slamr0
-slusb           root:dialout 0660 @ln -sf $MDEV slusb0
-fuse            root:root  0666
-
-# dri device
-card[0-9]       root:video 0660 =dri/
-
-# alsa sound devices and audio stuff
-# pcm.*           root:audio 0660 =snd/
-# control.*       root:audio 0660 =snd/
-# midi.*          root:audio 0660 =snd/
-# seq             root:audio 0660 =snd/
-# timer           root:audio 0660 =snd/
-
-# adsp            root:audio 0660 >sound/
-# audio           root:audio 0660 >sound/
-# dsp             root:audio 0660 >sound/
-# mixer           root:audio 0660 >sound/
-# sequencer.*     root:audio 0660 >sound/
-
-# misc stuff
-agpgart         root:root 0660  >misc/
-psaux           root:root 0660  >misc/
-rtc             root:root 0664  >misc/
-
-# input stuff
-event[0-9]+     root:root 0640 > input/
-mice            root:root 0640 > input/
-mouse[0-9]      root:root 0640 > input/
-ts[0-9]         root:root 0600 > input/
-
-
-# v4l stuff
-vbi[0-9]        root:video 0660 >v4l/
-video[0-9]      root:video 0660 >v4l/
-
-# dvb stuff
-dvb.*           root:video 0660 */lib/mdev/dvbdev
-
-# load drivers for usb devices
-usbdev[0-9].[0-9]       root:root 0660 */lib/mdev/usbdev
-usbdev[0-9].[0-9]_.*    root:root 0660
-
-# net devices
-tun[0-9]*       root:root 0600 > net/
-tap[0-9]*       root:root 0600 > net/
-
-# zaptel devices
-zap(.*)         root:dialout 0660 =zap/%1
-dahdi!(.*)      root:dialout 0660 =dahdi/%1
-
-# raid controllers
-cciss!(.*)      root:disk 0660 =cciss/%1
-ida!(.*)        root:disk 0660 =ida/%1
-rd!(.*)         root:disk 0660 =rd/%1
-
-sr[0-9]         root:cdrom 0660 @ln -sf $MDEV cdrom 
-
-# hpilo
-hpilo!(.*)      root:root 0660 =hpilo/%1
-
-# xen stuff
-xvd[a-z]        root:root 0660 */lib/mdev/xvd_links
-EOF
-
 }
 
 function bprofile(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Creating etc profile file."
-	cat > ${CLFS}/targetfs/etc/profile << "EOF"
+	cat > ${CLFS}/etc/profile << "EOF"
 # /etc/profile
 
 # Set the initial path
@@ -327,123 +202,16 @@ EOF
 }
 
 
-function inittab(){
-	echo -e "===============================================\n==============================================="
-	echo -e "Creating etc inittab file."
-	cat > ${CLFS}/targetfs/etc/inittab<< "EOF"
-# /etc/inittab
-# https://git.busybox.net/busybox/tree/examples/inittab 
-# /etc/inittab init(8) configuration for BusyBox
-#
-# Copyright (C) 1999-2004 by Erik Andersen <andersen@codepoet.org>
-#
-#
-# Note, BusyBox init doesn't support runlevels.  The runlevels field is
-# completely ignored by BusyBox init. If you want runlevels, use sysvinit.
-#
-#
-# Format for each entry: <id>:<runlevels>:<action>:<process>
-#
-# <id>: WARNING: This field has a non-traditional meaning for BusyBox init!
-#
-#	The id field is used by BusyBox init to specify the controlling tty for
-#	the specified process to run on.  The contents of this field are
-#	appended to "/dev/" and used as-is.  There is no need for this field to
-#	be unique, although if it isn't you may have strange results.  If this
-#	field is left blank, then the init's stdin/out will be used.
-#
-# <runlevels>: The runlevels field is completely ignored.
-#
-# <action>: Valid actions include: sysinit, wait, once, respawn, askfirst,
-#                                  shutdown, restart and ctrlaltdel.
-#
-#	sysinit actions are started first, and init waits for them to complete.
-#	wait actions are started next, and init waits for them to complete.
-#	once actions are started next (and not waited for).
-#
-#	askfirst and respawn are started next.
-#	For askfirst, before running the specified process, init displays
-#	the line "Please press Enter to activate this console"
-#	and then waits for the user to press enter before starting it.
-#
-#	shutdown actions are run on halt/reboot/poweroff, or on SIGQUIT.
-#	Then the machine is halted/rebooted/powered off, or for SIGQUIT,
-#	restart action is exec'ed (init process is replaced by that process).
-#	If no restart action specified, SIGQUIT has no effect.
-#
-#	ctrlaltdel actions are run when SIGINT is received
-#	(this might be initiated by Ctrl-Alt-Del key combination).
-#	After they complete, normal processing of askfirst / respawn resumes.
-#
-#	Note: unrecognized actions (like initdefault) will cause init to emit
-#	an error message, and then go along with its business.
-#
-# <process>: Specifies the process to be executed and it's command line.
-#
-# Note: BusyBox init works just fine without an inittab. If no inittab is
-# found, it has the following default behavior:
-#	::sysinit:/etc/init.d/rcS
-#	::askfirst:/bin/sh
-#	::ctrlaltdel:/sbin/reboot
-#	::shutdown:/sbin/swapoff -a
-#	::shutdown:/bin/umount -a -r
-#	::restart:/sbin/init
-#	tty2::askfirst:/bin/sh
-#	tty3::askfirst:/bin/sh
-#	tty4::askfirst:/bin/sh
-#
-# Boot-time system configuration/initialization script.
-# This is run first except when booting in single-user mode.
-#
-# ::sysinit:/etc/init.d/rcS
-
-# /bin/sh invocations on selected ttys
-#
-# Note below that we prefix the shell commands with a "-" to indicate to the
-# shell that it is supposed to be a login shell.  Normally this is handled by
-# login, but since we are bypassing login in this case, BusyBox lets you do
-# this yourself...
-#
-# Start an "askfirst" shell on the console (whatever that may be)
-::sysinit:-/bin/sh
-
-# Start an "askfirst" shell on /dev/tty2-4
-tty2::askfirst:-/bin/sh
-tty3::askfirst:-/bin/sh
-tty4::askfirst:-/bin/sh
-
-# /sbin/getty invocations for selected ttys
-tty4::respawn:/sbin/getty 38400 tty5
-tty5::respawn:/sbin/getty 38400 tty6
-
-# Example of how to put a getty on a serial line (for a terminal)
-#::respawn:/sbin/getty -L ttyS0 9600 vt100
-#::respawn:/sbin/getty -L ttyS1 9600 vt100
-#
-# Example how to put a getty on a modem line.
-#::respawn:/sbin/getty 57600 ttyS2
-
-# Stuff to do when restarting the init process
-::restart:/sbin/init
-
-# Stuff to do before rebooting
-::ctrlaltdel:/sbin/reboot
-::shutdown:/bin/umount -a -r
-::shutdown:/sbin/swapoff -a
-
-EOF
-}
-
 function hostname(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Creating hostname."
-	echo "blackos" > ${CLFS}/targetfs/etc/HOSTNAME
+	echo "blackos" > ${CLFS}/etc/HOSTNAME
 }
 
 function hostfile(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Creating hosts file."
-	cat > ${CLFS}/targetfs/etc/hosts << "EOF"
+	cat > ${CLFS}/etc/hosts << "EOF"
 # Begin /etc/hosts (network card version)
 
 127.0.0.1 localhost blackos
@@ -455,14 +223,14 @@ EOF
 function networkinterfaces(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Creating and configuring network scripts."
-	mkdir -pv ${CLFS}/targetfs/etc/network/if-{post-{up,down},pre-{up,down},up,down}.d
-	mkdir -pv ${CLFS}/targetfs/usr/share/udhcpc
-	cat > ${CLFS}/targetfs/etc/network/interfaces << "EOF"
+	mkdir -pv ${CLFS}/etc/network/if-{post-{up,down},pre-{up,down},up,down}.d
+	mkdir -pv ${CLFS}/usr/share/udhcpc
+	cat > ${CLFS}/etc/network/interfaces << "EOF"
 auto eth0
 iface eth0 inet dhcp
 EOF
 
-	cat > ${CLFS}/targetfs/usr/share/udhcpc/default.script << "EOF"
+	cat > ${CLFS}/usr/share/udhcpc/default.script << "EOF"
 #!/bin/sh
 # udhcpc Interface Configuration
 # Based on http://lists.debian.org/debian-boot/2002/11/msg00500.html
@@ -503,21 +271,21 @@ esac
 exit 0
 EOF
 
-	chmod +x ${CLFS}/targetfs/usr/share/udhcpc/default.script
+	chmod +x ${CLFS}/usr/share/udhcpc/default.script
 }
 
 function dropbear(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Compiling DropBear SSH."
-	cd /home/clfs/linuxfromscratch-sources/dropbear
+	cd ${WORK_DIR}/dropbear
 	git checkout $DROPBEAR_TAG
 	sed -i 's/.*mandir.*//g' Makefile.in
-	CC=$CC CFLAGS="-Os -W -Wall" ./configure --prefix=/usr --host=${CLFS_TARGET} --enable-static --with-zlib=/home/clfs/linuxfromscratch-sources/zlib-1.2.11/
+	CC=$CC CFLAGS="-Os -W -Wall" ./configure --prefix=/usr --host=${CLFS_TARGET} --enable-static --with-zlib=${WORK_DIR}/zlib
 	make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" -j$CPUTHREAD
 	make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"  install DESTDIR=${CLFS}/targetfs
-	install -dv ${CLFS}/targetfs/etc/dropbear
-	cd /home/clfs/linuxfromscratch-sources/cross-lfs-bootscripts-embedded
-	make install-dropbear DESTDIR=${CLFS}/targetfs
+	install -dv ${CLFS}/etc/dropbear
+	cd ${WORK_DIR}/cross-lfs-bootscripts-embedded
+	make install-dropbear DESTDIR=${CLFS}/
 }
 
 function wirelesstools(){
@@ -527,8 +295,8 @@ function wirelesstools(){
 	sed -i s/gcc/\$\{CLFS\_TARGET\}\-gcc/g Makefile
 	sed -i s/\ ar/\ \$\{CLFS\_TARGET\}\-ar/g Makefile
 	sed -i s/ranlib/\$\{CLFS\_TARGET\}\-ranlib/g Makefile
-	make PREFIX=${CLFS}/targetfs/usr -j$CPUTHREAD
-	make install PREFIX=${CLFS}/targetfs/usr
+	make PREFIX=${CLFS}/usr -j$CPUTHREAD
+	make install PREFIX=${CLFS}/usr
 }
 
 function netplug(){
@@ -537,25 +305,25 @@ function netplug(){
 	cd /home/clfs/linuxfromscratch-sources/netplug-1.2.9.2
 	patch -Np1 -i ../netplug-1.2.9.2-fixes-1.patch
 	make -j$CPUTHREAD
-	make DESTDIR=${CLFS}/targetfs install
+	make DESTDIR=${CLFS} install
 }
 
 function zlib(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Compiling zlib."
-	cd /home/clfs/linuxfromscratch-sources/zlib
+	cd ${WORK_DIR}/zlib
 	git checkout $ZLIB_TAG
 	CC=$CC CFLAGS="-Os" ./configure --shared
 	make
-	make prefix=${CLFS}/cross-tools/${CLFS_TARGET} install
-	cp -v ${CLFS}/cross-tools/${CLFS_TARGET}/lib/libz.so.1.2.11 ${CLFS}/targetfs/lib/
-	ln -sv libz.so.1.2.11 ${CLFS}/targetfs/lib/libz.so.1
+	make prefix=/crosstools/ install
+	cp -v /crosstools/lib/libz.so.1.2.11 ${CLFS}/lib/
+	ln -sv libz.so.1.2.11 ${CLFS}/lib/libz.so.1
 }
 
 function os-release(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Creating os-release file."
-	cat << EOF > ${CLFS}/targetfs/etc/os-release
+	cat << EOF > ${CLFS}/etc/os-release
 NAME="BlackOS Linux"
 PRETTY_NAME="BlackOS Linux"
 ID=blackos
@@ -567,11 +335,11 @@ EOF
 function ownership_tarball(){
 	echo -e "===============================================\n==============================================="
 	echo -e "Creating tarball."
-	su -c "chown -Rv root:root ${CLFS}/targetfs"
-	su -c "chgrp -v 13 ${CLFS}/targetfs/var/log/lastlog"
-	install -dv ${CLFS}/build
-	cd ${CLFS}/targetfs
-	su -c "tar -czfv ${CLFS}/build/blackos-automated.tar.gz * && chown clfs:clfs ${CLFS}/build/*"
+	su -c "chown -Rv root:root ${CLFS}/"
+	su -c "chgrp -v 13 ${CLFS}/var/log/lastlog"
+	install -dv /build
+	cd ${CLFS}
+	su -c "tar -czfv /build/blackos-automated.tar.gz *"
 }
 
 #####################################################
@@ -584,30 +352,27 @@ source blackosrc
 #####################################################
 ##################### Exec zone #####################
 #####################################################
+prebuild
 create_folders
 link_mtab
 create_root
 libgcc_s_so_1
 sync_repo
 musl
-busybox
+nushell
 eudev
 openrc
 openrc_scripts
 eudev_openrc_scripts
 ianaetc
 fstab
-linux
-cross_scripts
-mdev
 bprofile
-inittab
 hostname
 hostfile
 networkinterfaces
-zlib
 dropbear
 wirelesstools
 netplug
+zlib
 os-release
 ownership_tarball
