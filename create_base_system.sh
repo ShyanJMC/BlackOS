@@ -29,7 +29,7 @@ export CROSS_TOOLS=/crosstools
 function prebuild(){
 	mkdir -p /crosstools/lib
 	pacman -Syuq --needed --noconfirm base-devel rustup community/aarch64-linux-gnu-gcc community/aarch64-linux-gnu-gdb community/aarch64-linux-gnu-glibc community/aarch64-linux-gnu-linux-api-headers git 
-	git clone https://github.com/ShyanJMC/LinuxFromScratch-Sources
+	git clone https://github.com/ShyanJMC/LinuxFromScratch-Sources -C ${WORK_DIR}
 	cd ${WORK_DIR}/
 	git submodule init && git submodule sync && git submodule update --recursive
 	rustup toolchain install stable-aarch64-unknown-linux-gnu
