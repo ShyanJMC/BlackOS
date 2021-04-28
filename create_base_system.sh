@@ -346,8 +346,7 @@ function ownership_tarball(){
 ##################### Def Zone ######################
 #####################################################
 
-curl https://raw.githubusercontent.com/ShyanJMC/BlackOS/main/bashrc > blackosrc
-source blackosrc
+source bashrc
 
 #####################################################
 ##################### Exec zone #####################
