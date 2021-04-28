@@ -9,7 +9,7 @@ If you need more documentation about the project, go to the folder "Documentatio
 
 # Requirements
 
-> "aarch64-unknown-linux-gnu" toolchain
+> "aarch64-unknown-linux-gnu" toolchain (gcc, linux's headers, gdb, g++, etc).
 
 > rust and cargo
 
@@ -38,7 +38,7 @@ Is the .bashrc which contains all variables.
 
 Is the bash scripting file which contains functions and commands to build the system without going to CLFS and doing each step to build BlackOS from scratch.
 
-In the "config" folder, there are some kernel's configurations files (.config) depending on the SBC. But I really don't reccomend to compile your own kernel because probably many of you will fail on it (you will need to know the bootloader support for kernel's images types, which SOC supports inside the kernel, the specifics parts of that SOC and many other characteristics for that board which you prefer to use with BlackOS). My reccomendation is to use the kernel of another distribution that can run in that board.
+In "PlatformFiles" directory there are boot and modules files for specific single boards computers.
 
 # Copyright
 Designed and built by ShyanJMC (Joaquin Manuel Crespo). <br>
@@ -50,3 +50,4 @@ If you want or need to contact me, you can make do it through:
 * https://ar.linkedin.com/in/joaquin-mcrespo
 * joaquincrespo96@gmail.com
 * shyanjmc@protonmail.com 
+* shyan@shyanjmc.com
