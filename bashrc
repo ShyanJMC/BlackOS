@@ -16,7 +16,7 @@ export CLFS LC_ALL PATH
 export ARCH="aarch64"
 export CLFS_ARCH="aarch64"
 export CLFS_ARM_ARCH="aarch64"
-export CLFS_TARGET=aarch64-linux-gnu
+export CLFS_TARGET=aarch64-unknown-linux-gnu
 export CROSS_COMPILE=aarch64-linux-gnu-
 
 

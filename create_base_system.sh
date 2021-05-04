@@ -12,7 +12,6 @@
 
 export CLFS=/targetfs
 export CPUTHREAD=$(cat /proc/cpuinfo | grep processor | wc | cut -d' ' -f7)
-export BUSYBOX_BRANCH=remotes/origin/1_32_stable
 export DROPBEAR_TAG=tag/DROPBEAR_2020.81
 export ZLIB_TAG=tags/v1.2.11
 export WORK_DIR=/linuxfromscratch-sources
@@ -21,6 +20,8 @@ export EUDEV_TAG=tags/v3.2.10
 export OPENRC_BRACH=remotes/origin/HEAD
 export NUSHELL_BRACH=main
 export CROSS_TOOLS=/crosstools
+export COREUTILS_TAG=tags/v8.32
+export QEMU_LD_PREFIX="/usr/aarch64-linux-gnu/"
 
 ###########################################################################
 ######################## Functions zone ###################################
@@ -28,12 +29,10 @@ export CROSS_TOOLS=/crosstools
 
 function prebuild(){
 	mkdir -p /crosstools/lib
-	pacman -Syuq --needed --noconfirm base-devel rustup community/aarch64-linux-gnu-gcc community/aarch64-linux-gnu-gdb community/aarch64-linux-gnu-glibc community/aarch64-linux-gnu-linux-api-headers git 
+	pacman -Syuq --needed --noconfirm base-devel rustup community/aarch64-linux-gnu-gcc community/aarch64-linux-gnu-gdb community/aarch64-linux-gnu-glibc community/aarch64-linux-gnu-linux-api-headers git tar zip unzip gzip zlib qemu qemu-arch-extra qemu extra/qemu-arch-extra openssl
 	git clone https://github.com/ShyanJMC/LinuxFromScratch-Sources -C ${WORK_DIR}
 	cd ${WORK_DIR}/
 	git submodule init && git submodule sync && git submodule update --recursive
-	rustup toolchain install stable-aarch64-unknown-linux-gnu
-	rustup target add aarch64-unknown-linux-gnu
 }
 
 
@@ -99,23 +98,26 @@ function musl(){
 	DESTDIR=${CLFS}/ make install-libs
 }
 
-function nushell(){
-	echo "Compiling nushell"
-	cd ${WORK_DIR}/rust-lang-coreutils_alternatives/nushell
-	git checkout $NUSHELL_BRACH
-	cargo build --target aarch64-unknown-linux-gnu --release
-
+function coreutils(){
+	echo "Compiling coreutils"
+	cd ${WORK_DIR}/coreutils
+	git checkout ${COREUTILS_TAG}
+	make clean
+	./configure --with-openssl --libexecdir=/usr/lib --prefix=/targetfs/ --host=${CLFS_TARGET} --build=x86_64-pc-linux-gnu
+	make -j$CPUTHREAD
 }
+
+
 
 function eudev(){
 	cd ${WORK_DIR}/eudev
 	git checkout $EUDEV_TAG
 	autoreconf -f -i -s
-	./configure --host=aarch64-unknown-linux-gnu --prefix=/targetfs/ --disable-manpages --disable-selinux --enable-introspection=yes --with-sysroot=/usr/aarch64-linux-gnu --enable-hwdb
+	./configure --host=aarch64-unknown-linux-gnu --prefix=/targetfs/ --disable-selinux --enable-introspection=yes --with-sysroot=/usr/aarch64-linux-gnu --enable-hwdb
 	# As BlackOS have al bin directories as links to /usr/bin, the below line change the force of creation of symlink to avoid issues.
 	sed -i '1209d' src/udev/Makefile
 	sed -i '1208s/||//' src/udev/Makefile
-	make -j4
+	make -j$CPUTHREAD
 	make install
 }
 
@@ -124,7 +126,7 @@ function openrc(){
 	git checkout ${OPENRC_BRACH}
 	DESDIT=${CLFS} make PROGLDFLAGS=-static LIBNAME=lib64 MKNET=no MKPREFIX=yes MKSELINUX=no MKSYSVINIT=yes \
 BRANDING=\"BlackOS\" PKG_PREFIX=${CLFS}/usr/pkg LOCAL_PREFIX=${CLFS}/usr/local \
-PREFIX=${CLFS}
+PREFIX=${CLFS} -j$CPUTHREAD
 	DESDIT=${CLFS} make PROGLDFLAGS=-static LIBNAME=lib64 MKNET=no MKPREFIX=yes MKSELINUX=no MKSYSVINIT=yes \
 BRANDING=\"BlackOS\" PKG_PREFIX=${CLFS}/usr/pkg LOCAL_PREFIX=${CLFS}/usr/local \
 PREFIX=${CLFS} install 
@@ -339,7 +341,7 @@ function ownership_tarball(){
 	su -c "chgrp -v 13 ${CLFS}/var/log/lastlog"
 	install -dv /build
 	cd ${CLFS}
-	su -c "tar -czfv /build/blackos-automated.tar.gz *"
+	tar -czfv /build/blackos-automated.tar.gz *
 }
 
 #####################################################
@@ -358,7 +360,7 @@ create_root
 libgcc_s_so_1
 sync_repo
 musl
-nushell
+coreutils
 eudev
 openrc
 openrc_scripts

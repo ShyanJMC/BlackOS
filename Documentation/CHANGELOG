@@ -1,13 +1,14 @@
 
-- Version: v0.5.6-alpha
+- Version: v0.6.6-alpha
 - Responsible: ShyanJMC (Joaquin Manuel Crespo)
-- Increase: Two new features.
+- Increase: Tree new features.
 - Target: ARMv8
-- Usable: Yes, but isn't pacman yet.
+- Usable: Yes, but is not pacman in the system yet.
 - Changelog:
 -- Added eudev (from Gentoo).
 -- Added OpenRC init (from Gentoo).
 -- Added scripts for OpenRC.
+-- Added nushell.
 =====================================================================
 =====================================================================
 25/03/2021:
