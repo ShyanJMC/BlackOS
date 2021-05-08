@@ -29,7 +29,7 @@ export QEMU_LD_PREFIX="/usr/aarch64-linux-gnu/"
 
 function prebuild(){
 	mkdir -p /crosstools/lib
-	pacman -Syuq --needed --noconfirm base-devel rustup community/aarch64-linux-gnu-gcc community/aarch64-linux-gnu-gdb community/aarch64-linux-gnu-glibc community/aarch64-linux-gnu-linux-api-headers git tar zip unzip gzip zlib qemu qemu-arch-extra qemu extra/qemu-arch-extra openssl
+	pacman -Syuq --needed --noconfirm base-devel rustup git tar zip unzip gzip zlib qemu qemu-arch-extra qemu extra/qemu-arch-extra openssl core/linux-aarch64-headers core/linux-api-headers core/linux-raspberrypi4-headers core/linux-odroid-n2-headers core/linux-odroid-c2-headers core/linux-oak-headers core/linux-gru-headers core/linux-espressobin-headers core/gcc-libs 
 	git clone https://github.com/ShyanJMC/LinuxFromScratch-Sources -C ${WORK_DIR}
 	cd ${WORK_DIR}/
 	git submodule init && git submodule sync && git submodule update --recursive
@@ -44,11 +44,10 @@ function create_folders(){
 	mkdir -pv ${CLFS}/var/{cache,lib,local,lock,log,opt,spool}
 	install -dv -m 0750 ${CLFS}/root
 	install -dv -m 1777 ${CLFS}/{var/,}tmp
-	mkdir -pv ${CLFS}/usr/{,local/}{bin,include,lib,lib64,sbin,share,src}
+	mkdir -pv ${CLFS}/usr/{,local/}{bin,include,lib,sbin,share,src}
 	ln -s usr/lib ${CLFS}/lib
 	ln -s usr/bin ${CLFS}/bin
 	ln -s usr/sbin ${CLFS}/sbin
-	ln -s usr/lib64 ${CLFS}/lib64
 	ln -s ../run ${CLFS}/var/run
 	ln -s ../run/lock ${CLFS}/var/lock
 	ln -s spool/mail ${CLFS}/var/mail
@@ -74,9 +73,9 @@ EOF
 
 function libgcc_s_so_1(){
 	echo -e "===============================================\n==============================================="
-	echo -e "Coping libgcc_s.so.1 lib64 file."
-	cp -v /usr/aarch64-linux-gnu/lib64/libgcc_s.so.1 ${CLFS}/lib/libgcc_s.so.1
-	# ${CLFS_TARGET}-strip ${CLFS}/lib/libgcc_s.so.1
+	echo -e "Coping libgcc_s.so.{,1} lib64 file."
+	cp -v /lib/libgcc_s.so ${CLFS}/lib/libgcc_s.so
+	cp -v /lib/libgcc_s.so.1 ${CLFS}/lib/libgcc_s.so.1
 }
 
 function sync_repo(){
@@ -93,7 +92,7 @@ function musl(){
 	echo -e "Compiling musl."
 	mkdir ${WORK_DIR}/musl/build
 	cd ${WORK_DIR}/musl/build
-	../configure CROSS_COMPILE=${CLFS_TARGET}- --prefix=/ --disable-static --target=${CLFS_TARGET}
+	../configure --prefix=/ --disable-static
 	make -j$CPUTHREAD
 	DESTDIR=${CLFS}/ make install-libs
 }
@@ -103,7 +102,7 @@ function coreutils(){
 	cd ${WORK_DIR}/coreutils
 	git checkout ${COREUTILS_TAG}
 	make clean
-	./configure --with-openssl --libexecdir=/usr/lib --prefix=/targetfs/ --host=${CLFS_TARGET} --build=x86_64-pc-linux-gnu
+	./configure --with-openssl --libexecdir=/usr/lib --prefix=${CLFS} 
 	make -j$CPUTHREAD
 }
 
@@ -113,7 +112,7 @@ function eudev(){
 	cd ${WORK_DIR}/eudev
 	git checkout $EUDEV_TAG
 	autoreconf -f -i -s
-	./configure --host=aarch64-unknown-linux-gnu --prefix=/targetfs/ --disable-selinux --enable-introspection=yes --with-sysroot=/usr/aarch64-linux-gnu --enable-hwdb
+	./configure --prefix=/targetfs/ --disable-selinux --enable-introspection=yes --enable-hwdb
 	# As BlackOS have al bin directories as links to /usr/bin, the below line change the force of creation of symlink to avoid issues.
 	sed -i '1209d' src/udev/Makefile
 	sed -i '1208s/||//' src/udev/Makefile
@@ -282,7 +281,7 @@ function dropbear(){
 	cd ${WORK_DIR}/dropbear
 	git checkout $DROPBEAR_TAG
 	sed -i 's/.*mandir.*//g' Makefile.in
-	CC=$CC CFLAGS="-Os -W -Wall" ./configure --prefix=/usr --host=${CLFS_TARGET} --enable-static --with-zlib=${WORK_DIR}/zlib
+	CC=$CC CFLAGS="-Os -W -Wall" ./configure --prefix=/usr --enable-static --with-zlib=${WORK_DIR}/zlib
 	make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" -j$CPUTHREAD
 	make MULTI=1   PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"  install DESTDIR=${CLFS}/targetfs
 	install -dv ${CLFS}/etc/dropbear
@@ -347,8 +346,6 @@ function ownership_tarball(){
 #####################################################
 ##################### Def Zone ######################
 #####################################################
-
-source bashrc
 
 #####################################################
 ##################### Exec zone #####################
