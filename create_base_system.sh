@@ -350,27 +350,42 @@ function ownership_tarball(){
 #####################################################
 ##################### Exec zone #####################
 #####################################################
-prebuild
-create_folders
-link_mtab
-create_root
-libgcc_s_so_1
-sync_repo
-musl
-coreutils
-eudev
-openrc
-openrc_scripts
-eudev_openrc_scripts
-ianaetc
-fstab
-bprofile
-hostname
-hostfile
-networkinterfaces
-dropbear
-wirelesstools
-netplug
-zlib
-os-release
-ownership_tarball
+
+if [ $1 == "prebuild" ] {
+	prebuild
+}
+
+if [ $1 == "build" ] {
+	create_folders
+	link_mtab
+	create_root
+	libgcc_s_so_1
+	sync_repo
+	musl
+	coreutils
+	eudev
+	openrc
+	openrc_scripts
+	eudev_openrc_scripts
+	ianaetc
+	fstab
+	bprofile
+	hostname
+	hostfile
+	networkinterfaces
+	dropbear
+	wirelesstools
+	netplug
+	zlib
+	os-release
+	ownership_tarball
+}
+
+else {
+	echo "
+	BlackOS Script.
+	Arguments:
+	- prebuild : to install dependencies.
+	- build: to build BlackOS.
+	"
+}
