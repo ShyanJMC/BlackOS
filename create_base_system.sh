@@ -22,6 +22,7 @@ export NUSHELL_BRACH=main
 export CROSS_TOOLS=/crosstools
 export COREUTILS_TAG=tags/v8.32
 export QEMU_LD_PREFIX="/usr/aarch64-linux-gnu/"
+export GLIBC_BRANCH=release/2.33/master
 
 ###########################################################################
 ######################## Functions zone ###################################
@@ -73,18 +74,12 @@ EOF
 
 function libgcc_s_so_1(){
 	echo -e "===============================================\n==============================================="
-	echo -e "Coping libgcc_s.so.{,1} lib64 file."
-	cp -v /lib/libgcc_s.so ${CLFS}/lib/libgcc_s.so
-	cp -v /lib/libgcc_s.so.1 ${CLFS}/lib/libgcc_s.so.1
-}
-
-function sync_repo(){
-	echo -e "===============================================\n==============================================="
-	echo -e "Sync repositories."
-	cd ${WORK_DIR}
-	git submodule init
-	git submodule sync
-	git submodule update --recursive
+	echo "Compiling GlibC"
+	cd ${WORK_DIR}/glibc
+	git checkout ${GLIBC_BRANCH}
+	./configure --enable-stack-protector=all --prefix=${CLFS}
+	make -j$CPUTHREAD
+	make install
 }
 
 function musl(){
@@ -360,7 +355,6 @@ if [ $1 == "build" ] {
 	link_mtab
 	create_root
 	libgcc_s_so_1
-	sync_repo
 	musl
 	coreutils
 	eudev
