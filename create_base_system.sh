@@ -346,11 +346,11 @@ function ownership_tarball(){
 ##################### Exec zone #####################
 #####################################################
 
-if [ $1 == "prebuild" ] {
+if [ $1 == "prebuild" ]; then
 	prebuild
-}
+fi
 
-if [ $1 == "build" ] {
+if [ $1 == "build" ]; then
 	create_folders
 	link_mtab
 	create_root
@@ -373,13 +373,12 @@ if [ $1 == "build" ] {
 	zlib
 	os-release
 	ownership_tarball
-}
 
-else {
+else 
 	echo "
 	BlackOS Script.
 	Arguments:
 	- prebuild : to install dependencies.
 	- build: to build BlackOS.
 	"
-}
+fi
