@@ -23,14 +23,17 @@ export CROSS_TOOLS=/crosstools
 export COREUTILS_TAG=tags/v8.32
 export QEMU_LD_PREFIX="/usr/aarch64-linux-gnu/"
 export GLIBC_BRANCH=release/2.33/master
+export BASH_VERSION=bash-5.1
+export GREP_TAG=tag/v3.6
+export SED_TAG=tags/v4.8
 
 ###########################################################################
 ######################## Functions zone ###################################
-###########################################################################
+-###########################################################################
 
 function prebuild(){
 	mkdir -p /crosstools/lib
-	pacman -Syuq --needed --noconfirm base-devel rustup git tar zip unzip gzip zlib qemu qemu-arch-extra qemu extra/qemu-arch-extra openssl core/linux-aarch64-headers core/linux-api-headers core/linux-raspberrypi4-headers core/linux-odroid-n2-headers core/linux-odroid-c2-headers core/linux-oak-headers core/linux-gru-headers core/linux-espressobin-headers core/gcc-libs 
+	pacman -Syuq --needed --noconfirm base-devel rustup git tar zip unzip gzip zlib qemu qemu-arch-extra qemu extra/qemu-arch-extra openssl core/linux-aarch64-headers core/linux-api-headers core/linux-raspberrypi4-headers core/linux-odroid-n2-headers core/linux-odroid-c2-headers core/linux-oak-headers core/linux-gru-headers core/linux-espressobin-headers core/gcc-libs rsync
 	git clone https://github.com/ShyanJMC/LinuxFromScratch-Sources -C ${WORK_DIR}
 	cd ${WORK_DIR}/
 	git submodule init && git submodule sync && git submodule update --recursive
@@ -72,12 +75,14 @@ EOF
 	echo -e "===============================================\n==============================================="
 }
 
-function libgcc_s_so_1(){
+function glibc(){
 	echo -e "===============================================\n==============================================="
 	echo "Compiling GlibC"
 	cd ${WORK_DIR}/glibc
 	git checkout ${GLIBC_BRANCH}
-	./configure --enable-stack-protector=all --prefix=${CLFS}
+	mkdir build/
+	cd build/
+	../configure --enable-stack-protector=all --prefix=${CLFS}/usr
 	make -j$CPUTHREAD
 	make install
 }
@@ -93,22 +98,63 @@ function musl(){
 }
 
 function coreutils(){
+	echo -e "===============================================\n==============================================="
 	echo "Compiling coreutils"
 	cd ${WORK_DIR}/coreutils
 	git checkout ${COREUTILS_TAG}
 	make clean
 	./configure --with-openssl --libexecdir=/usr/lib --prefix=${CLFS} 
 	make -j$CPUTHREAD
+	make install
 }
 
+function findutils(){
+	cd ${WORK_DIR}/findutils
+	./bootstrap
+	./configure --prefix=${CLFS} --without-selinux --enable-threads=posix --enable-d_type-optimization
+	make -j$CPUTHREAD
+	make install
+}
 
+function bash(){
+	echo -e "===============================================\n==============================================="
+	echo "Compiling BASH"
+	cd ${WORK_DIR}/${BASH_VERSION}
+	./configure --enable-strict-posix-default --enable-threads=posix --enable-readline --enable-progcomp --enable-multibyte --enable-job-control --enable-history --enable-help-builtin --enable-alias --enable-arith-for-command --enable-array-variables --enable-direxpand-default --enable-static-link --prefix=${CLFS}
+	make -j$CPUTHREAD
+	make install
+}
+
+function bgrep(){
+	echo -e "===============================================\n==============================================="
+	echo "Compiling GREP"
+	cd ${WORK_DIR}/"grep"
+	git checkout ${GREP_TAG}
+	./bootstrap
+	./configure --prefix=${CLFS} --enable-threads=posix 
+	make -j$CPUTHREAD
+	make install
+}
+
+function bsed(){
+	echo -e "===============================================\n==============================================="
+	echo "Compiling SED"
+	cd ${WORK_DIR}/"sed"
+	git checkout ${SED_TAG}
+	./bootstrap
+	./configure --prefix=${CLFS} --without-selinux --enable-threads=posix 
+	make -j$CPUTHREAD
+	make install
+}
 
 function eudev(){
+	echo -e "===============================================\n==============================================="
+	echo "Compiling EUdev"
 	cd ${WORK_DIR}/eudev
-	git checkout $EUDEV_TAG
+	git checkout ${EUDEV_TAG}
 	autoreconf -f -i -s
-	./configure --prefix=/targetfs/ --disable-selinux --enable-introspection=yes --enable-hwdb
-	# As BlackOS have al bin directories as links to /usr/bin, the below line change the force of creation of symlink to avoid issues.
+	./configure --prefix=${CLFS} --disable-selinux --enable-introspection=yes --enable-hwdb
+	# As BlackOS have al bin directories as links to /usr/bin and /usr/sbin, the below line change the force of creation of symlink to avoid issues.
 	sed -i '1209d' src/udev/Makefile
 	sed -i '1208s/||//' src/udev/Makefile
 	make -j$CPUTHREAD
@@ -116,6 +162,8 @@ function eudev(){
 }
 
 function openrc(){
+	echo -e "===============================================\n==============================================="
+	echo "Compiling OpenRC"
 	cd ${WORK_DIR}/openrc
 	git checkout ${OPENRC_BRACH}
 	DESDIT=${CLFS} make PROGLDFLAGS=-static LIBNAME=lib64 MKNET=no MKPREFIX=yes MKSELINUX=no MKSYSVINIT=yes \
@@ -354,9 +402,12 @@ if [ $1 == "build" ]; then
 	create_folders
 	link_mtab
 	create_root
-	libgcc_s_so_1
-	musl
+	glibc
 	coreutils
+	findutils
+	bgrep
+	bsed
+	bash
 	eudev
 	openrc
 	openrc_scripts
